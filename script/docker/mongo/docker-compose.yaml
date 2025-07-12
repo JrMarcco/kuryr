@@ -1,0 +1,151 @@
+services:
+  # ---------- Config Server (3节点副本集) ----------
+  mongo-cfg1:
+    image: bitnami/mongodb:latest
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongo-cfg1
+      - MONGODB_SHARDING_MODE=configsvr
+      - MONGODB_REPLICA_SET_NAME=cfgrs
+      - MONGODB_ROOT_USER=${ROOT_USER}
+      - MONGODB_ROOT_PASSWORD=${ROOT_PASSWORD}
+      - MONGODB_REPLICA_SET_KEY=${REPLICA_SET_KEY}
+      - ALLOW_EMPTY_PASSWORD=no
+    volumes:
+      - ./mongo-cfg1/data:/bitnami/mongodb
+    networks:
+      - mongodb-network
+
+  mongo-cfg2:
+    image: bitnami/mongodb:latest
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongo-cfg2
+      - MONGODB_SHARDING_MODE=configsvr
+      - MONGODB_REPLICA_SET_NAME=cfgrs
+      - MONGODB_INITIAL_PRIMARY_HOST=mongo-cfg1
+      - MONGODB_INITIAL_PRIMARY_PORT_NUMBER=27017
+      - MONGODB_ROOT_USER=${ROOT_USER}
+      - MONGODB_ROOT_PASSWORD=${ROOT_PASSWORD}
+      - MONGODB_REPLICA_SET_KEY=${REPLICA_SET_KEY}
+      - ALLOW_EMPTY_PASSWORD=no
+    volumes:
+      - ./mongo-cfg2/data:/bitnami/mongodb
+    networks:
+      - mongodb-network
+  mongo-cfg3:
+    image: bitnami/mongodb:latest
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongo-cfg3
+      - MONGODB_SHARDING_MODE=configsvr
+      - MONGODB_REPLICA_SET_NAME=cfgrs
+      - MONGODB_INITIAL_PRIMARY_HOST=mongo-cfg1
+      - MONGODB_INITIAL_PRIMARY_PORT_NUMBER=27017
+      - MONGODB_ROOT_USER=${ROOT_USER}
+      - MONGODB_ROOT_PASSWORD=${ROOT_PASSWORD}
+      - MONGODB_REPLICA_SET_KEY=${REPLICA_SET_KEY}
+      - ALLOW_EMPTY_PASSWORD=no
+    volumes:
+      - ./mongo-cfg3/data:/bitnami/mongodb
+    networks:
+      - mongodb-network
+
+  # ---------- Shard1 (2节点副本集) ----------
+  mongo-shard1a:
+    image: bitnami/mongodb:latest
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongo-shard1a
+      - MONGODB_SHARDING_MODE=shard
+      - MONGODB_REPLICA_SET_NAME=shard1rs
+      - MONGODB_CONFIG_SVR_REPLICA_SET_NAME=cfgrs
+      - MONGODB_CONFIG_SVR_HOSTS=mongo-cfg1,mongo-cfg2,mongo-cfg3
+      - MONGODB_ROOT_USER=${ROOT_USER}
+      - MONGODB_ROOT_PASSWORD=${ROOT_PASSWORD}
+      - MONGODB_REPLICA_SET_KEY=${REPLICA_SET_KEY}
+      - ALLOW_EMPTY_PASSWORD=no
+    volumes:
+      - ./mongo-shard1a/data:/bitnami/mongodb
+    networks:
+      - mongodb-network
+
+  mongo-shard1b:
+    image: bitnami/mongodb:latest
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongo-shard1b
+      - MONGODB_SHARDING_MODE=shard
+      - MONGODB_REPLICA_SET_NAME=shard1rs
+      - MONGODB_INITIAL_PRIMARY_HOST=mongo-shard1a
+      - MONGODB_INITIAL_PRIMARY_PORT_NUMBER=27017
+      - MONGODB_CONFIG_SVR_REPLICA_SET_NAME=cfgrs
+      - MONGODB_CONFIG_SVR_HOSTS=mongo-cfg1,mongo-cfg2,mongo-cfg3
+      - MONGODB_ROOT_USER=${ROOT_USER}
+      - MONGODB_ROOT_PASSWORD=${ROOT_PASSWORD}
+      - MONGODB_REPLICA_SET_KEY=${REPLICA_SET_KEY}
+      - ALLOW_EMPTY_PASSWORD=no
+    volumes:
+      - ./mongo-shard1b/data:/bitnami/mongodb
+    networks:
+      - mongodb-network
+
+  # ---------- Shard2 (2节点副本集) ----------
+  mongo-shard2a:
+    image: bitnami/mongodb:latest
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongo-shard2a
+      - MONGODB_SHARDING_MODE=shard
+      - MONGODB_REPLICA_SET_NAME=shard2rs
+      - MONGODB_CONFIG_SVR_REPLICA_SET_NAME=cfgrs
+      - MONGODB_CONFIG_SVR_HOSTS=mongo-cfg1,mongo-cfg2,mongo-cfg3
+      - MONGODB_ROOT_USER=${ROOT_USER}
+      - MONGODB_ROOT_PASSWORD=${ROOT_PASSWORD}
+      - MONGODB_REPLICA_SET_KEY=${REPLICA_SET_KEY}
+      - ALLOW_EMPTY_PASSWORD=no
+    volumes:
+      - ./mongo-shard2a/data:/bitnami/mongodb
+    networks:
+      - mongodb-network
+
+  mongo-shard2b:
+    image: bitnami/mongodb:latest
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongo-shard2b
+      - MONGODB_SHARDING_MODE=shard
+      - MONGODB_REPLICA_SET_NAME=shard2rs
+      - MONGODB_INITIAL_PRIMARY_HOST=mongo-shard2a
+      - MONGODB_INITIAL_PRIMARY_PORT_NUMBER=27017
+      - MONGODB_CONFIG_SVR_REPLICA_SET_NAME=cfgrs
+      - MONGODB_CONFIG_SVR_HOSTS=mongo-cfg1,mongo-cfg2,mongo-cfg3
+      - MONGODB_ROOT_USER=${ROOT_USER}
+      - MONGODB_ROOT_PASSWORD=${ROOT_PASSWORD}
+      - MONGODB_REPLICA_SET_KEY=${REPLICA_SET_KEY}
+      - ALLOW_EMPTY_PASSWORD=no
+    volumes:
+      - ./mongo-shard2b/data:/bitnami/mongodb
+    networks:
+      - mongodb-network
+
+  # ---------- Mongos Router ----------
+  mongos:
+    image: bitnami/mongodb:latest
+    hostname: mongos
+    ports:
+      - "27017:27017"
+    depends_on:
+      - mongo-cfg1
+      - mongo-cfg2
+      - mongo-cfg3
+      - mongo-shard1a
+      - mongo-shard1b
+      - mongo-shard2a
+      - mongo-shard2b
+    environment:
+      - MONGODB_SHARDING_MODE=mongos
+      - MONGODB_CONFIG_SVR_REPLICA_SET_NAME=cfgrs
+      - MONGODB_CONFIG_SVR_HOSTS=mongo-cfg1,mongo-cfg2,mongo-cfg3
+      - MONGODB_SHARD_CHUNKS=2 # Added for initial shard setup, optional
+      - MONGODB_ROOT_USER=${ROOT_USER}
+      - MONGODB_ROOT_PASSWORD=${ROOT_PASSWORD}
+      - MONGODB_REPLICA_SET_KEY=${REPLICA_SET_KEY}
+      - ALLOW_EMPTY_PASSWORD=no
+
+networks:
+  mongodb-network:
+    driver: bridge
