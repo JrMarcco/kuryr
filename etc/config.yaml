@@ -1,0 +1,10 @@
+profile:
+  env: "dev"
+
+app:
+  name: "kuryr"
+  addr: "0.0.0.0:50501"
+  group: "kuryr"
+  timeout: 1000 # millisecond
+  read_weight:  100
+  write_weight: 10
