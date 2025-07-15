@@ -13,18 +13,16 @@ func main() {
 	initViper()
 
 	fx.New(
-		// 初始化 zap.Logger
-		ioc.LoggerFxOpt,
-
-		// 初始化 grpc
-		ioc.GrpcFxOpt,
-
-		// 初始化 ioc.App
-		ioc.AppFxOpt,
-
 		fx.WithLogger(func(logger *zap.Logger) fxevent.Logger {
 			return &fxevent.ZapLogger{Logger: logger}
 		}),
+
+		// 初始化 zap.Logger
+		ioc.LoggerFxOpt,
+		// 初始化 grpc
+		ioc.GrpcFxOpt,
+		// 初始化 ioc.App
+		ioc.AppFxOpt,
 
 		// 注册 zap logger lifecycle 确保日志缓冲区被刷新
 		ioc.LoggerFxInvoke,

@@ -18,7 +18,7 @@ max_line_length = 120
 [*.go]
 indent_style = tab
 
-[*.{ts,js,vue,css}]
+[*.{ts,tsx,js,jsx,vue,css}]
 tab_width = 2
 indent_size = 2
 
