@@ -17,10 +17,10 @@ etcd:
   dial_timeout: 5000            # 单位：毫秒
   tls:
     enabled: false
-    # cert_file: "/path/to/cert.pem"
-    # key_file: "/path/to/key.pem"
-    # ca_file: "/path/to/ca.pem"
-    # insecure_skip_verify: false
+    cert_file: "etc/etcd-certs/client.pem"
+    key_file: "etc/etcd-certs/client-key.pem"
+    ca_file: "etc/etcd-certs/ca.pem"
+    insecure_skip_verify: false
 
 
 

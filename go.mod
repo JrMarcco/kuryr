@@ -3,7 +3,7 @@ module github.com/JrMarcco/kuryr
 go 1.24.5
 
 require (
-	github.com/JrMarcco/easy-grpc v0.0.2
+	github.com/JrMarcco/easy-grpc v0.0.4
 	github.com/JrMarcco/kuryr-api v0.0.2
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/golang-jwt/jwt/v5 v5.2.3

@@ -12,5 +12,13 @@ services:
       - ETCD_ROOT_PASSWORD=${ETCD_ROOT_PASSWORD}
       # Data directory
       - ETCD_DATA_DIR=/opt/bitnami/etcd/data
+      # TLS settings
+      - ETCD_CERT_FILE=/opt/bitnami/etcd/certs/server.pem
+      - ETCD_KEY_FILE=/opt/bitnami/etcd/certs/server-key.pem
+      - ETCD_TRUSTED_CA_FILE=/opt/bitnami/etcd/certs/ca.pem
+      - ETCD_CLIENT_CERT_AUTH=true
+      - ETCD_AUTO_TLS=false
+
     volumes:
       - ./kuryr-data:/opt/bitnami/etcd/data
+      - ./certs:/opt/bitnami/etcd/certs:ro

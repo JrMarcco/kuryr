@@ -3,7 +3,9 @@ package ioc
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/spf13/viper"
@@ -45,16 +47,65 @@ func InitEtcdClient(logger *zap.Logger, lc fx.Lifecycle) *clientv3.Client {
 
 	// 配置 tls
 	if cfg.TLS.Enabled {
-		tlsCfg := &tls.Config{InsecureSkipVerify: cfg.TLS.InsecureSkipVerify}
+		tlsCfg := &tls.Config{
+			InsecureSkipVerify: cfg.TLS.InsecureSkipVerify,
+			MinVersion:         tls.VersionTLS12,
+			CipherSuites: []uint16{
+				// 支持现代密码套件，包括 Ed25519
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			},
+		}
 
 		if cfg.TLS.CertFile != "" && cfg.TLS.KeyFile != "" {
 			cert, err := tls.LoadX509KeyPair(cfg.TLS.CertFile, cfg.TLS.KeyFile)
 			if err != nil {
-				panic(err)
+				logger.Error("[kuryr] failed to load Ed25519 client certificate",
+					zap.String("cert_file", cfg.TLS.CertFile),
+					zap.String("key_file", cfg.TLS.KeyFile),
+					zap.Error(err),
+				)
+				panic(fmt.Errorf("failed to load client certificate: %w", err))
 			}
 			tlsCfg.Certificates = []tls.Certificate{cert}
+
+			// 检查证书的公钥算法
+			if len(cert.Certificate) > 0 {
+				parsedCert, err := x509.ParseCertificate(cert.Certificate[0])
+				if err == nil {
+					logger.Info("[kuryr] client certificate loaded successfully",
+						zap.String("public_key_algorithm", parsedCert.PublicKeyAlgorithm.String()),
+						zap.String("signature_algorithm", parsedCert.SignatureAlgorithm.String()))
+				}
+			}
 		}
+
+		// 加载CA证书
+		if cfg.TLS.CAFile != "" {
+			caCert, err := os.ReadFile(cfg.TLS.CAFile)
+			if err != nil {
+				logger.Error("[kuryr] failed to load CA certificate",
+					zap.String("ca_file", cfg.TLS.CAFile),
+					zap.Error(err),
+				)
+				panic(fmt.Errorf("failed to load CA certificate: %w", err))
+			}
+
+			caCertPool := x509.NewCertPool()
+			if !caCertPool.AppendCertsFromPEM(caCert) {
+				logger.Error("[kuryr] failed to parse CA certificate")
+				panic(fmt.Errorf("failed to parse CA certificate"))
+			}
+			tlsCfg.RootCAs = caCertPool
+			logger.Info("[kuryr] CA certificate loaded successfully")
+		}
+
 		clientCfg.TLS = tlsCfg
+		logger.Info("[kuryr] TLS configuration enabled with Ed25519 support")
 	}
 
 	client, err := clientv3.New(clientCfg)
