@@ -1,0 +1,16 @@
+services:
+  etcd-kuryr:
+    image: bitnami/etcd:latest
+    restart: unless-stopped
+    ports:
+      - "52379:2379"  # Client port
+      - "52380:2380"  # Peer port
+    environment:
+      # Basic settings
+      - ALLOW_NONE_AUTHENTICATION=no
+      - ETCD_NAME=${ETCD_NAME}
+      - ETCD_ROOT_PASSWORD=${ETCD_ROOT_PASSWORD}
+      # Data directory
+      - ETCD_DATA_DIR=/opt/bitnami/etcd/data
+    volumes:
+      - ./kuryr-data:/opt/bitnami/etcd/data
