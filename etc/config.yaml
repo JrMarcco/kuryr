@@ -16,7 +16,7 @@ etcd:
   password: "<root_passwd>"
   dial_timeout: 5000            # 单位：毫秒
   tls:
-    enabled: false
+    enabled: true
     cert_file: "etc/etcd-certs/client.pem"
     key_file: "etc/etcd-certs/client-key.pem"
     ca_file: "etc/etcd-certs/ca.pem"

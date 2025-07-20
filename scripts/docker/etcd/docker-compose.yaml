@@ -4,7 +4,6 @@ services:
     restart: unless-stopped
     ports:
       - "52379:2379"  # Client port
-      - "52380:2380"  # Peer port
     environment:
       # Basic settings
       - ALLOW_NONE_AUTHENTICATION=no
@@ -18,7 +17,9 @@ services:
       - ETCD_TRUSTED_CA_FILE=/opt/bitnami/etcd/certs/ca.pem
       - ETCD_CLIENT_CERT_AUTH=true
       - ETCD_AUTO_TLS=false
-
+      # 禁用非 TLS 连接的关键配置
+      - ETCD_LISTEN_CLIENT_URLS=https://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=https://0.0.0.0:2379
     volumes:
       - ./kuryr-data:/opt/bitnami/etcd/data
-      - ./certs:/opt/bitnami/etcd/certs:ro
+      - ./kuryr-certs:/opt/bitnami/etcd/certs:ro

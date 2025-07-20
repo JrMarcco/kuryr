@@ -8,7 +8,7 @@ ETCD_USER="root"
 ETCD_PASSWORD="<root_passwd>"
 
 # TLS 证书路径
-CERT_DIR=""
+CERT_DIR="./etc/etcd-certs"
 CLIENT_CERT="$CERT_DIR/client.pem"
 CLIENT_KEY="$CERT_DIR/client-key.pem"
 CA_CERT="$CERT_DIR/ca.pem"
