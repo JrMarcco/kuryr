@@ -5,6 +5,24 @@ app:
   name: "kuryr"
   addr: ":50501"
   group: "kuryr"
-  timeout: 1000 # millisecond
-  read_weight:  100
-  write_weight: 10
+  timeout: 5000 # 单位：毫秒
+  read_weight:  10
+  write_weight: 100
+
+etcd:
+  endpoints:
+    - "192.168.3.3:52379"
+  username: "root"
+  password: "<root_passwd>"
+  dial_timeout: 5000            # 单位：毫秒
+  tls:
+    enabled: false
+    # cert_file: "/path/to/cert.pem"
+    # key_file: "/path/to/key.pem"
+    # ca_file: "/path/to/ca.pem"
+    # insecure_skip_verify: false
+
+
+
+registry:
+  lease_ttl: 30 # 单位：秒，这里和 etcd api 保持一直所以是秒单位

@@ -3,13 +3,11 @@ package jwt
 import (
 	"context"
 	"crypto/ed25519"
-	"errors"
 	"fmt"
 	"maps"
 	"strings"
 	"time"
 
-	"github.com/JrMarcco/kuryr/internal/pkg/grpc/client"
 	"github.com/golang-jwt/jwt/v5"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -88,28 +86,28 @@ func (b *InterceptorBuilder) Build() grpc.UnaryServerInterceptor {
 		if len(authHeaders) == 0 {
 			return nil, status.Error(codes.Unauthenticated, "missing authorization token")
 		}
-		tokenStr := authHeaders[0]
+		//tokenStr := authHeaders[0]
 
-		mc, err := b.Decode(tokenStr)
-		if err != nil {
-			if errors.Is(err, jwt.ErrTokenExpired) {
-				return nil, status.Error(codes.Unauthenticated, "token expired")
-			}
-			if errors.Is(err, jwt.ErrTokenSignatureInvalid) {
-				return nil, status.Error(codes.Unauthenticated, "invalid signature")
-			}
-			return nil, status.Errorf(codes.Unauthenticated, "invalid token: %s", err.Error())
-		}
+		//mc, err := b.Decode(tokenStr)
+		//if err != nil {
+		//	if errors.Is(err, jwt.ErrTokenExpired) {
+		//		return nil, status.Error(codes.Unauthenticated, "token expired")
+		//	}
+		//	if errors.Is(err, jwt.ErrTokenSignatureInvalid) {
+		//		return nil, status.Error(codes.Unauthenticated, "invalid signature")
+		//	}
+		//	return nil, status.Errorf(codes.Unauthenticated, "invalid token: %s", err.Error())
+		//}
 
-		if val, ok := mc[paramNameBizId]; ok {
-			// 设置业务 id 到 context
-			bizId := uint64(val.(float64))
-			ctx = client.WithBizId(ctx, bizId)
-		}
-		if val, ok := mc[paramNameBizKey]; ok {
-			bizKey := val.(string)
-			ctx = client.WithBizKey(ctx, bizKey)
-		}
+		//if val, ok := mc[paramNameBizId]; ok {
+		//	// 设置业务 id 到 context
+		//	bizId := uint64(val.(float64))
+		//	ctx = client.WithBizId(ctx, bizId)
+		//}
+		//if val, ok := mc[paramNameBizKey]; ok {
+		//	bizKey := val.(string)
+		//	ctx = client.WithBizKey(ctx, bizKey)
+		//}
 
 		return handler(ctx, req)
 	}

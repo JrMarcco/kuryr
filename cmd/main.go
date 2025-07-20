@@ -19,13 +19,15 @@ func main() {
 
 		// 初始化 zap.Logger
 		ioc.LoggerFxOpt,
+		// 初始化 etcd
+		ioc.EtcdFxOpt,
+		// 初始化 grpc registry
+		ioc.RegistryFxOpt,
 		// 初始化 grpc
 		ioc.GrpcFxOpt,
 		// 初始化 ioc.App
 		ioc.AppFxOpt,
 
-		// 注册 zap logger lifecycle 确保日志缓冲区被刷新
-		ioc.LoggerFxInvoke,
 		// 注册 app lifecycle
 		ioc.AppFxInvoke,
 	).Run()
