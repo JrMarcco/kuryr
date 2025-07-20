@@ -1,17 +1,18 @@
 #!/bin/bash
 # scripts/etcdctl.sh
 
-# 参数根据情况调整
+# ================ ↓ 连接参数 ↓ ================ #
 ETCD_HOST="192.168.3.3"
 ETCD_PORT="52379"
 ETCD_USER="root"
 ETCD_PASSWORD="<root_passwd>"
 
 # TLS 证书路径
-CERT_DIR="../etc/etcd-certs"
+CERT_DIR=""
 CLIENT_CERT="$CERT_DIR/client.pem"
 CLIENT_KEY="$CERT_DIR/client-key.pem"
 CA_CERT="$CERT_DIR/ca.pem"
+# ================ ↑ 连接参数 ↑ ================ #
 
 # 自动检测是否启用 TLS
 USE_TLS=false
