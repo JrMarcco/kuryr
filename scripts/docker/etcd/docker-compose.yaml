@@ -1,25 +1,136 @@
 services:
-  etcd-kuryr:
+  etcd-kuryr-1:
     image: bitnami/etcd:latest
     restart: unless-stopped
     ports:
-      - "52379:2379"  # Client port
+      - "52379:2379"  # Client port (HTTPS only)
+      - "52380:2380"  # Peer port (HTTPS only)
     environment:
       # Basic settings
       - ALLOW_NONE_AUTHENTICATION=no
-      - ETCD_NAME=${ETCD_NAME}
+      - ETCD_NAME=etcd-kuryr-1
       - ETCD_ROOT_PASSWORD=${ETCD_ROOT_PASSWORD}
       # Data directory
       - ETCD_DATA_DIR=/opt/bitnami/etcd/data
-      # TLS settings
+      # ===== 强制 TLS 客户端连接配置 =====
       - ETCD_CERT_FILE=/opt/bitnami/etcd/certs/server.pem
       - ETCD_KEY_FILE=/opt/bitnami/etcd/certs/server-key.pem
       - ETCD_TRUSTED_CA_FILE=/opt/bitnami/etcd/certs/ca.pem
       - ETCD_CLIENT_CERT_AUTH=true
       - ETCD_AUTO_TLS=false
-      # 禁用非 TLS 连接的关键配置
+      # 只监听 HTTPS 端口，禁用 HTTP
       - ETCD_LISTEN_CLIENT_URLS=https://0.0.0.0:2379
-      - ETCD_ADVERTISE_CLIENT_URLS=https://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=https://etcd-kuryr-1:2379
+      # ===== 强制 TLS 对等连接配置 =====
+      - ETCD_PEER_CERT_FILE=/opt/bitnami/etcd/certs/server.pem
+      - ETCD_PEER_KEY_FILE=/opt/bitnami/etcd/certs/server-key.pem
+      - ETCD_PEER_TRUSTED_CA_FILE=/opt/bitnami/etcd/certs/ca.pem
+      - ETCD_PEER_CLIENT_CERT_AUTH=true
+      - ETCD_PEER_AUTO_TLS=false
+      # 只监听 HTTPS 对等端口，禁用 HTTP
+      - ETCD_LISTEN_PEER_URLS=https://0.0.0.0:2380
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=https://etcd-kuryr-1:2380
+      # ===== 集群配置 =====
+      - ETCD_INITIAL_CLUSTER_TOKEN=kuryr-etcd-cluster
+      - ETCD_INITIAL_CLUSTER=etcd-kuryr-1=https://etcd-kuryr-1:2380,etcd-kuryr-2=https://etcd-kuryr-2:2380,etcd-kuryr-3=https://etcd-kuryr-3:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      # ===== 安全增强配置 =====
+      - ETCD_CIPHER_SUITES=TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+      - ETCD_TLS_MIN_VERSION=TLS1.2
     volumes:
-      - ./kuryr-data:/opt/bitnami/etcd/data
+      - ./kuryr-data/data-1:/opt/bitnami/etcd/data
       - ./kuryr-certs:/opt/bitnami/etcd/certs:ro
+    networks:
+      - etcd-network
+
+  etcd-kuryr-2:
+    image: bitnami/etcd:latest
+    restart: unless-stopped
+    ports:
+      - "52381:2379"  # Client port (HTTPS only)
+      - "52382:2380"  # Peer port (HTTPS only)
+    environment:
+      # Basic settings
+      - ALLOW_NONE_AUTHENTICATION=no
+      - ETCD_NAME=etcd-kuryr-2
+      - ETCD_ROOT_PASSWORD=${ETCD_ROOT_PASSWORD}
+      # Data directory
+      - ETCD_DATA_DIR=/opt/bitnami/etcd/data
+      # ===== 强制 TLS 客户端连接配置 =====
+      - ETCD_CERT_FILE=/opt/bitnami/etcd/certs/server.pem
+      - ETCD_KEY_FILE=/opt/bitnami/etcd/certs/server-key.pem
+      - ETCD_TRUSTED_CA_FILE=/opt/bitnami/etcd/certs/ca.pem
+      - ETCD_CLIENT_CERT_AUTH=true
+      - ETCD_AUTO_TLS=false
+      # 只监听 HTTPS 端口，禁用 HTTP
+      - ETCD_LISTEN_CLIENT_URLS=https://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=https://etcd-kuryr-2:2379
+      # ===== 强制 TLS 对等连接配置 =====
+      - ETCD_PEER_CERT_FILE=/opt/bitnami/etcd/certs/server.pem
+      - ETCD_PEER_KEY_FILE=/opt/bitnami/etcd/certs/server-key.pem
+      - ETCD_PEER_TRUSTED_CA_FILE=/opt/bitnami/etcd/certs/ca.pem
+      - ETCD_PEER_CLIENT_CERT_AUTH=true
+      - ETCD_PEER_AUTO_TLS=false
+      # 只监听 HTTPS 对等端口，禁用 HTTP
+      - ETCD_LISTEN_PEER_URLS=https://0.0.0.0:2380
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=https://etcd-kuryr-2:2380
+      # ===== 集群配置 =====
+      - ETCD_INITIAL_CLUSTER_TOKEN=kuryr-etcd-cluster
+      - ETCD_INITIAL_CLUSTER=etcd-kuryr-1=https://etcd-kuryr-1:2380,etcd-kuryr-2=https://etcd-kuryr-2:2380,etcd-kuryr-3=https://etcd-kuryr-3:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      # ===== 安全增强配置 =====
+      - ETCD_CIPHER_SUITES=TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+      - ETCD_TLS_MIN_VERSION=TLS1.2
+    volumes:
+      - ./kuryr-data/data-2:/opt/bitnami/etcd/data
+      - ./kuryr-certs:/opt/bitnami/etcd/certs:ro
+    networks:
+      - etcd-network
+
+  etcd-kuryr-3:
+    image: bitnami/etcd:latest
+    restart: unless-stopped
+    ports:
+      - "52383:2379"  # Client port (HTTPS only)
+      - "52384:2380"  # Peer port (HTTPS only)
+    environment:
+      # Basic settings
+      - ALLOW_NONE_AUTHENTICATION=no
+      - ETCD_NAME=etcd-kuryr-3
+      - ETCD_ROOT_PASSWORD=${ETCD_ROOT_PASSWORD}
+      # Data directory
+      - ETCD_DATA_DIR=/opt/bitnami/etcd/data
+      # ===== 强制 TLS 客户端连接配置 =====
+      - ETCD_CERT_FILE=/opt/bitnami/etcd/certs/server.pem
+      - ETCD_KEY_FILE=/opt/bitnami/etcd/certs/server-key.pem
+      - ETCD_TRUSTED_CA_FILE=/opt/bitnami/etcd/certs/ca.pem
+      - ETCD_CLIENT_CERT_AUTH=true
+      - ETCD_AUTO_TLS=false
+      # 只监听 HTTPS 端口，禁用 HTTP
+      - ETCD_LISTEN_CLIENT_URLS=https://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=https://etcd-kuryr-3:2379
+      # ===== 强制 TLS 对等连接配置 =====
+      - ETCD_PEER_CERT_FILE=/opt/bitnami/etcd/certs/server.pem
+      - ETCD_PEER_KEY_FILE=/opt/bitnami/etcd/certs/server-key.pem
+      - ETCD_PEER_TRUSTED_CA_FILE=/opt/bitnami/etcd/certs/ca.pem
+      - ETCD_PEER_CLIENT_CERT_AUTH=true
+      - ETCD_PEER_AUTO_TLS=false
+      # 只监听 HTTPS 对等端口，禁用 HTTP
+      - ETCD_LISTEN_PEER_URLS=https://0.0.0.0:2380
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=https://etcd-kuryr-3:2380
+      # ===== 集群配置 =====
+      - ETCD_INITIAL_CLUSTER_TOKEN=kuryr-etcd-cluster
+      - ETCD_INITIAL_CLUSTER=etcd-kuryr-1=https://etcd-kuryr-1:2380,etcd-kuryr-2=https://etcd-kuryr-2:2380,etcd-kuryr-3=https://etcd-kuryr-3:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      # ===== 安全增强配置 =====
+      - ETCD_CIPHER_SUITES=TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+      - ETCD_TLS_MIN_VERSION=TLS1.2
+    volumes:
+      - ./kuryr-data/data-3:/opt/bitnami/etcd/data
+      - ./kuryr-certs:/opt/bitnami/etcd/certs:ro
+    networks:
+      - etcd-network
+
+networks:
+  etcd-network:
+    driver: bridge

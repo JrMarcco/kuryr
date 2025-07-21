@@ -2,8 +2,7 @@
 # scripts/etcdctl.sh
 
 # ================ ↓ 连接参数 ↓ ================ #
-ETCD_HOST="192.168.3.3"
-ETCD_PORT="52379"
+ETCD_ENDPOINTS="https://192.168.3.3:52379,https://192.168.3.3:52381,https://192.168.3.3:52383"
 ETCD_USER="root"
 ETCD_PASSWORD="<root_passwd>"
 
@@ -26,13 +25,13 @@ fi
 
 # 构建 etcdctl 命令
 if [ "$USE_TLS" = true ]; then
-    ETCDCTL_CMD="etcdctl --endpoints=https://$ETCD_HOST:$ETCD_PORT \
+    ETCDCTL_CMD="etcdctl --endpoints=$ETCD_ENDPOINTS \
                         --cert=$CLIENT_CERT \
                         --key=$CLIENT_KEY \
                         --cacert=$CA_CERT \
                         --user=$ETCD_USER:$ETCD_PASSWORD"
 else
-    ETCDCTL_CMD="etcdctl --endpoints=$ETCD_HOST:$ETCD_PORT \
+    ETCDCTL_CMD="etcdctl --endpoints=$ETCD_ENDPOINTS \
                         --user=$ETCD_USER:$ETCD_PASSWORD"
 fi
 

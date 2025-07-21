@@ -12,6 +12,8 @@ app:
 etcd:
   endpoints:
     - "192.168.3.3:52379"
+    - "192.168.3.3:52381"
+    - "192.168.3.3:52383"
   username: "root"
   password: "<root_passwd>"
   dial_timeout: 5000            # 单位：毫秒
@@ -21,8 +23,6 @@ etcd:
     key_file: "etc/etcd-certs/client-key.pem"
     ca_file: "etc/etcd-certs/ca.pem"
     insecure_skip_verify: false
-
-
 
 registry:
   lease_ttl: 30 # 单位：秒，这里和 etcd api 保持一直所以是秒单位
