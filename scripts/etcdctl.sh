@@ -2,7 +2,7 @@
 # scripts/etcdctl.sh
 
 # ================ ↓ 连接参数 ↓ ================ #
-ETCD_ENDPOINTS="https://192.168.3.3:52379,https://192.168.3.3:52381,https://192.168.3.3:52383"
+ETCD_ENDPOINTS="192.168.3.3:52379,192.168.3.3:52381,192.168.3.3:52383"
 ETCD_USER="root"
 ETCD_PASSWORD="<root_passwd>"
 
@@ -18,6 +18,7 @@ USE_TLS=false
 if [ -f "$CLIENT_CERT" ] && [ -f "$CLIENT_KEY" ] && [ -f "$CA_CERT" ]; then
     USE_TLS=true
     echo "🔒 检测到 TLS 证书，自动启用 TLS 连接"
+    ETCD_ENDPOINTS=$(echo "$ETCD_ENDPOINTS" | sed 's/\([^,]*\)/https:\/\/\1/g')
 else
     echo "🔓 未检测到 TLS 证书，使用普通连接"
 fi
