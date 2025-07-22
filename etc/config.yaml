@@ -26,3 +26,21 @@ etcd:
 
 registry:
   lease_ttl: 30 # 单位：秒，这里和 etcd api 保持一直所以是秒单位
+
+cache:
+  defaultExpiration: 60000000000
+  cleanupInterval: 60000000000
+  
+redis:
+  addr: "192.168.3.3:6379"
+  password: "<passwd>"
+
+db:
+  base:
+    # sslmode=disable 用于开发环境，线上一般推荐使用 sslmode=require / sslmode=verify-ca(更高安全性) / sslmode=verify-full (最高安全性)
+    dsn: "postgres://jrmarcco:%3Cpasswd%3E@192.168.3.3:5432/kuryr?sslmode=disable&connect_timeout=1&statement_timeout=3000&idle_in_transaction_session_timeout=3000"
+  sharding:
+    kuryr_01:
+      dsn: "postgres://jrmarcco:%3Cpasswd%3E@192.168.3.3:5432/kuryr_01?sslmode=disable&connect_timeout=1&statement_timeout=3000&idle_in_transaction_session_timeout=3000"
+    kuryr_02:
+      dsn: "postgres://jrmarcco:%3Cpasswd%3E@192.168.3.3:5432/kuryr_02?sslmode=disable&connect_timeout=1&statement_timeout=3000&idle_in_transaction_session_timeout=3000"

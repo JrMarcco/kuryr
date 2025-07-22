@@ -15,11 +15,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const (
-	paramNameBizId  = "biz_id"
-	paramNameBizKey = "biz_key"
-)
-
 // InterceptorBuilder Interceptor 构造器，
 // TODO: 消息中心只负责校验 jwt，后续这里只需要存放 pub key，同时 pub key 需要接受来自鉴权中心的更新推送实时变更
 type InterceptorBuilder struct {
@@ -99,12 +94,12 @@ func (b *InterceptorBuilder) Build() grpc.UnaryServerInterceptor {
 		//	return nil, status.Errorf(codes.Unauthenticated, "invalid token: %s", err.Error())
 		//}
 
-		//if val, ok := mc[paramNameBizId]; ok {
+		//if val, ok := mc[paramBizId]; ok {
 		//	// 设置业务 id 到 context
 		//	bizId := uint64(val.(float64))
 		//	ctx = client.WithBizId(ctx, bizId)
 		//}
-		//if val, ok := mc[paramNameBizKey]; ok {
+		//if val, ok := mc[paramBizKey]; ok {
 		//	bizKey := val.(string)
 		//	ctx = client.WithBizKey(ctx, bizKey)
 		//}

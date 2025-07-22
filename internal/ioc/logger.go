@@ -16,7 +16,7 @@ func InitLogger(lc fx.Lifecycle) *zap.Logger {
 	}
 
 	cfg := config{}
-	if err := viper.Unmarshal(&cfg); err != nil {
+	if err := viper.UnmarshalKey("profile", &cfg); err != nil {
 		panic(err)
 	}
 

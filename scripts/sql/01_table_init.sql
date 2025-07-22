@@ -1,10 +1,23 @@
-DROP TABLE IF EXISTS `biz_conf`;
-CREATE TABLE `biz_conf` (
-    `id`         BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    `owner_id`   BIGINT UNSIGNED NOT NULL COMMENT '所有者ID',
-    `owner_type` VARCHAR(64) NOT NULL COMMENT '所有者类型，例如：user, project, team...',
-    `rate_limit` INT         NOT NULL DEFAULT -1 COMMENT '速率限制（请求/秒），-1表示不限制',
-    `created_at` BIGINT UNSIGNED NOT NULL COMMENT '创建时间戳',
-    `updated_at` BIGINT UNSIGNED NOT NULL COMMENT '更新时间戳',
-    UNIQUE KEY `uk_owner` (`owner_id`, `owner_type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='业务方配置表';
+DROP TABLE IF EXISTS biz_config;
+CREATE TABLE biz_config (
+    id BIGSERIAL PRIMARY KEY,
+    owner_id BIGINT NOT NULL,
+    channel_config JSONB NOT NULL,
+    quota_config JSONB NOT NULL,
+    callback_config JSONB NOT NULL,
+    rate_limit INT NOT NULL DEFAULT -1,
+    created_at BIGINT NOT NULL,
+    updated_at BIGINT NOT NULL
+);
+
+-- 在 owner_id 列上创建索引
+CREATE INDEX idx_biz_config_owner_id ON biz_config (owner_id);
+
+COMMENT ON TABLE biz_config IS '用户信息表';
+COMMENT ON COLUMN biz_config.owner_id IS '所有者 id ( biz_info.id )';
+COMMENT ON COLUMN biz_config.channel_config IS '渠道配置';
+COMMENT ON COLUMN biz_config.quota_config IS '配额配置';
+COMMENT ON COLUMN biz_config.callback_config IS '回调配置';
+COMMENT ON COLUMN biz_config.rate_limit IS '限流阈值 ( requests/s )，-1 表示不限制';
+COMMENT ON COLUMN biz_config.created_at IS '创建时间戳（Unix 毫秒值）';
+COMMENT ON COLUMN biz_config.updated_at IS '更新时间戳（Unix 毫秒值）';

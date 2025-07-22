@@ -19,10 +19,20 @@ func main() {
 
 		// 初始化 zap.Logger
 		ioc.LoggerFxOpt,
+		// 初始化 go cache
+		ioc.GoCacheFxOpt,
+		// 初始化 redis
+		ioc.RedisFxOpt,
+		// 初始化 db
+		ioc.DBFxOpt,
 		// 初始化 etcd
 		ioc.EtcdFxOpt,
 		// 初始化 grpc registry
 		ioc.RegistryFxOpt,
+		// 初始化 repository
+		ioc.RepoFxOpt,
+		// 初始化 service
+		ioc.ServiceFxOpt,
 		// 初始化 grpc
 		ioc.GrpcFxOpt,
 		// 初始化 ioc.App
