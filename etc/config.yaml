@@ -3,7 +3,7 @@ profile:
 
 app:
   name: "kuryr"
-  addr: ":50501"
+  addr: "localhost:50501"
   group: "kuryr"
   timeout: 5000 # 单位：毫秒
   read_weight:  10

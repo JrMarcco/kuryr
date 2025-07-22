@@ -7,6 +7,11 @@ import (
 	"github.com/JrMarcco/easy-kit/retry"
 )
 
+const (
+	StrategyTypeFixedInterval      = "fixed_interval"
+	StrategyTypeExponentialBackoff = "exponential_backoff"
+)
+
 type Config struct {
 	Type               string                    `json:"type"`
 	FixedInterval      *FixedIntervalConfig      `json:"fixed_interval"`
@@ -26,9 +31,9 @@ type ExponentialBackoffConfig struct {
 
 func NewRetryStrategy(cfg Config) (retry.Strategy, error) {
 	switch cfg.Type {
-	case "fixed_interval":
+	case StrategyTypeFixedInterval:
 		return retry.NewFixedIntervalStrategy(cfg.FixedInterval.Interval, cfg.FixedInterval.MaxRetryTimes)
-	case "exponential_backoff":
+	case StrategyTypeExponentialBackoff:
 		return retry.NewExponentialBackoffStrategy(
 			cfg.ExponentialBackoff.InitialInterval,
 			cfg.ExponentialBackoff.MaxInterval,

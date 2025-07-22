@@ -121,7 +121,7 @@ func (s *BizConfigServer) protoToDomain(pb *configv1.BizConfig) domain.BizConfig
 
 func (s *BizConfigServer) convertRetry(pbRetry *configv1.RetryPolicyConfig) *retry.Config {
 	return &retry.Config{
-		Type: "exponential_backoff",
+		Type: retry.StrategyTypeExponentialBackoff,
 		ExponentialBackoff: &retry.ExponentialBackoffConfig{
 			InitialInterval: time.Duration(pbRetry.InitIntervalMs) * time.Millisecond,
 			MaxInterval:     time.Duration(pbRetry.MaxIntervalMs) * time.Millisecond,
