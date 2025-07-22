@@ -4,7 +4,7 @@ go 1.24.5
 
 require (
 	github.com/JrMarcco/dlock v0.0.2
-	github.com/JrMarcco/easy-grpc v0.0.4
+	github.com/JrMarcco/easy-grpc v0.0.9
 	github.com/JrMarcco/easy-kit v0.0.7
 	github.com/JrMarcco/kuryr-api v0.0.6
 	github.com/cespare/xxhash/v2 v2.3.0

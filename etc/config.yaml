@@ -30,7 +30,7 @@ registry:
 cache:
   defaultExpiration: 60000000000
   cleanupInterval: 60000000000
-  
+
 redis:
   addr: "192.168.3.3:6379"
   password: "<passwd>"
