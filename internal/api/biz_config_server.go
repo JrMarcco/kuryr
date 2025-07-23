@@ -5,7 +5,6 @@ import (
 	"time"
 
 	configv1 "github.com/JrMarcco/kuryr-api/api/config/v1"
-	"github.com/JrMarcco/kuryr/internal/api/interceptor/jwt"
 	"github.com/JrMarcco/kuryr/internal/domain"
 	"github.com/JrMarcco/kuryr/internal/pkg/retry"
 	"github.com/JrMarcco/kuryr/internal/service/bizconf"
@@ -24,18 +23,9 @@ func (s *BizConfigServer) Save(ctx context.Context, request *configv1.SaveReques
 		}, nil
 	}
 
-	bizId, err := jwt.ContextBizId(ctx)
-	if err != nil {
-		return &configv1.SaveResponse{
-			Success: false,
-			ErrMsg:  err.Error(),
-		}, err
-	}
-
 	bizConfig := s.protoToDomain(request.Config)
-	bizConfig.OwnerId = bizId
 
-	err = s.svc.Save(ctx, bizConfig)
+	err := s.svc.Save(ctx, bizConfig)
 	if err != nil {
 		return &configv1.SaveResponse{
 			Success: false,
@@ -63,20 +53,21 @@ func (s *BizConfigServer) GetByIds(context.Context, *configv1.GetByIdsRequest) (
 // protoToDomain convert protobuf to domain
 func (s *BizConfigServer) protoToDomain(pb *configv1.BizConfig) domain.BizConfig {
 	bizConfig := domain.BizConfig{
+		Id:        pb.BizId,
 		RateLimit: int(pb.RateLimit),
 	}
 
 	if pb.ChannelConfig != nil {
 		channelConfig := &domain.ChannelConfig{
-			Channels: make([]domain.ChannelItem, 0, len(pb.ChannelConfig.Items)),
+			Channels: make([]domain.ChannelItem, len(pb.ChannelConfig.Items)),
 		}
 
-		for _, channelItem := range pb.ChannelConfig.Items {
-			channelConfig.Channels = append(channelConfig.Channels, domain.ChannelItem{
-				Channel:  channelItem.Channel,
-				Priority: int(channelItem.Priority),
-				Enabled:  channelItem.Enabled,
-			})
+		for index, item := range pb.ChannelConfig.Items {
+			channelConfig.Channels[index] = domain.ChannelItem{
+				Channel:  item.Channel,
+				Priority: int(item.Priority),
+				Enabled:  item.Enabled,
+			}
 		}
 
 		if pb.ChannelConfig.RetryPolicy != nil {
@@ -86,18 +77,18 @@ func (s *BizConfigServer) protoToDomain(pb *configv1.BizConfig) domain.BizConfig
 		bizConfig.ChannelConfig = channelConfig
 	}
 
-	if pb.Quota != nil {
+	if pb.QuotaConfig != nil {
 		quotaConfig := &domain.QuotaConfig{}
-		if pb.Quota.Daily != nil {
-			dailyQuota := pb.Quota.Daily
-			quotaConfig.DailyQuota = &domain.QuotaDetail{
+		if pb.QuotaConfig.Daily != nil {
+			dailyQuota := pb.QuotaConfig.Daily
+			quotaConfig.Daily = &domain.Quota{
 				SMS:   dailyQuota.Sms,
 				Email: dailyQuota.Email,
 			}
 		}
-		if pb.Quota.Monthly != nil {
-			monthlyQuota := pb.Quota.Monthly
-			quotaConfig.MonthlyQuota = &domain.QuotaDetail{
+		if pb.QuotaConfig.Monthly != nil {
+			monthlyQuota := pb.QuotaConfig.Monthly
+			quotaConfig.Monthly = &domain.Quota{
 				SMS:   monthlyQuota.Sms,
 				Email: monthlyQuota.Email,
 			}

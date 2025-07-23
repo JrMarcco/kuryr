@@ -4,14 +4,13 @@ import "github.com/JrMarcco/kuryr/internal/pkg/retry"
 
 // BizConfig 业务方配置领域对象。
 type BizConfig struct {
-	Id             uint64
-	OwnerId        uint64         // 所有者 id ( biz_info.id )
-	ChannelConfig  *ChannelConfig // 渠道配置
-	QuotaConfig    *QuotaConfig   // 配额配置
-	CallbackConfig *CallbackConfig
-	RateLimit      int
-	CreatedAt      int64
-	UpdatedAt      int64
+	Id             uint64          `json:"id"`
+	ChannelConfig  *ChannelConfig  `json:"channel_config"` // 渠道配置
+	QuotaConfig    *QuotaConfig    `json:"quota_config"`   // 配额配置
+	CallbackConfig *CallbackConfig `json:"callback_config"`
+	RateLimit      int             `json:"rate_limit"`
+	CreatedAt      int64           `json:"created_at"`
+	UpdatedAt      int64           `json:"updated_at"`
 }
 
 type ChannelItem struct {
@@ -25,14 +24,14 @@ type ChannelConfig struct {
 	RetryPolicyConfig *retry.Config `json:"retry_policy_config"`
 }
 
-type QuotaDetail struct {
+type Quota struct {
 	SMS   int32 `json:"sms"`
 	Email int32 `json:"email"`
 }
 
 type QuotaConfig struct {
-	DailyQuota   *QuotaDetail `json:"daily_quota"`
-	MonthlyQuota *QuotaDetail `json:"monthly_quota"`
+	Daily   *Quota `json:"daily"`
+	Monthly *Quota `json:"monthly"`
 }
 
 type CallbackConfig struct {

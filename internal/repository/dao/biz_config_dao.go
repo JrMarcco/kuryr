@@ -12,13 +12,16 @@ import (
 
 type BizConfig struct {
 	Id             uint64
-	OwnerId        uint64
-	ChannelConfig  xsql.JsonColumn[domain.ChannelConfig]
-	QuotaConfig    xsql.JsonColumn[domain.QuotaConfig]
-	CallbackConfig xsql.JsonColumn[domain.CallbackConfig]
+	ChannelConfig  xsql.JsonColumn[domain.ChannelConfig]  `gorm:"type:json;serializer:json"`
+	QuotaConfig    xsql.JsonColumn[domain.QuotaConfig]    `gorm:"type:json;serializer:json"`
+	CallbackConfig xsql.JsonColumn[domain.CallbackConfig] `gorm:"type:json;serializer:json"`
 	RateLimit      int
 	CreatedAt      int64
 	UpdatedAt      int64
+}
+
+func (bc BizConfig) TableName() string {
+	return "biz_config"
 }
 
 type BizConfigDao interface {

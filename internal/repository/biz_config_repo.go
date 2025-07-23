@@ -49,7 +49,6 @@ func (r *DefaultBizConfigRepo) Save(ctx context.Context, bizConfig domain.BizCon
 func (r *DefaultBizConfigRepo) toEntity(bizConfig domain.BizConfig) dao.BizConfig {
 	entity := dao.BizConfig{
 		Id:        bizConfig.Id,
-		OwnerId:   bizConfig.OwnerId,
 		RateLimit: bizConfig.RateLimit,
 		CreatedAt: bizConfig.CreatedAt,
 		UpdatedAt: bizConfig.UpdatedAt,
@@ -82,7 +81,6 @@ func (r *DefaultBizConfigRepo) toEntity(bizConfig domain.BizConfig) dao.BizConfi
 func (r *DefaultBizConfigRepo) toDomain(entity dao.BizConfig) domain.BizConfig {
 	bizConfig := domain.BizConfig{
 		Id:        entity.Id,
-		OwnerId:   entity.OwnerId,
 		RateLimit: entity.RateLimit,
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,

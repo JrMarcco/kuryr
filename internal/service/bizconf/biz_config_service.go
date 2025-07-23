@@ -23,7 +23,7 @@ type DefaultBizConfigService struct {
 }
 
 func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.BizConfig) error {
-	if bizConfig.OwnerId <= 0 {
+	if bizConfig.Id == 0 {
 		return ErrInvalidBizId
 	}
 	return s.repo.Save(ctx, bizConfig)
