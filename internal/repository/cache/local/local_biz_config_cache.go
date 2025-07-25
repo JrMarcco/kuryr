@@ -21,17 +21,34 @@ type LBizConfigCache struct {
 	logger *zap.Logger
 }
 
-func (l *LBizConfigCache) Set(_ context.Context, bizConfig domain.BizConfig) error {
+func (c *LBizConfigCache) Set(_ context.Context, bizConfig domain.BizConfig) error {
 	key := cache.BizConfigCacheKey(bizConfig.Id)
-	l.cc.Set(key, bizConfig, cache.BizConfigDefaultLocalExp)
+	c.cc.Set(key, bizConfig, cache.BizConfigDefaultLocalExp)
+	return nil
+}
+
+func (c *LBizConfigCache) Get(_ context.Context, id uint64) (domain.BizConfig, error) {
+	val, ok := c.cc.Get(cache.BizConfigCacheKey(id))
+	if !ok {
+		return domain.BizConfig{}, fmt.Errorf("[biz config] biz config not found")
+	}
+	bizConfig, ok := val.(domain.BizConfig)
+	if !ok {
+		return domain.BizConfig{}, fmt.Errorf("[biz config] biz config type mismatch")
+	}
+	return bizConfig, nil
+}
+
+func (c *LBizConfigCache) Del(_ context.Context, id uint64) error {
+	c.cc.Delete(cache.BizConfigCacheKey(id))
 	return nil
 }
 
 // watchRedis 监听 redis 实时更新本地缓存
-func (l *LBizConfigCache) watchRedis(ctx context.Context) {
-	redisClient, ok := l.rc.(*redis.Client)
+func (c *LBizConfigCache) watchRedis(ctx context.Context) {
+	redisClient, ok := c.rc.(*redis.Client)
 	if !ok {
-		l.logger.Error("[biz config] failed to cast redis client to redis.Client")
+		c.logger.Error("[biz config] failed to cast redis client to redis.Client")
 		return
 	}
 
@@ -40,11 +57,11 @@ func (l *LBizConfigCache) watchRedis(ctx context.Context) {
 	defer func(pubSub *redis.PubSub) {
 		err := pubSub.Close()
 		if err != nil {
-			l.logger.Error("[biz config] failed to close pub sub", zap.Error(err))
+			c.logger.Error("[biz config] failed to close pub sub", zap.Error(err))
 		}
 	}(pubSub)
 
-	l.logger.Info("[biz config] start watching redis keyspace event", zap.String("pattern", watchKey))
+	c.logger.Info("[biz config] start watching redis keyspace event", zap.String("pattern", watchKey))
 
 	ch := pubSub.Channel()
 	for {
@@ -53,15 +70,15 @@ func (l *LBizConfigCache) watchRedis(ctx context.Context) {
 			if msg == nil {
 				return
 			}
-			l.handleKeyChange(ctx, msg)
+			c.handleKeyChange(ctx, msg)
 		case <-ctx.Done():
-			l.logger.Info("[biz config] stop watching redis keyspace event", zap.String("pattern", "biz_config*"))
+			c.logger.Info("[biz config] stop watching redis keyspace event", zap.String("pattern", "biz_config*"))
 			return
 		}
 	}
 }
 
-func (l *LBizConfigCache) handleKeyChange(ctx context.Context, msg *redis.Message) {
+func (c *LBizConfigCache) handleKeyChange(ctx context.Context, msg *redis.Message) {
 	// 解析消息
 	// msg.Channel 格式: __keyspace@0__:biz_config_xxx
 	// msg.Payload 是操作类型: set, del, expire 等
@@ -73,19 +90,19 @@ func (l *LBizConfigCache) handleKeyChange(ctx context.Context, msg *redis.Messag
 	key := parts[1]
 	op := msg.Payload
 
-	l.logger.Info("[biz config] redis keyspace event", zap.String("key", key), zap.String("operation", op))
+	c.logger.Info("[biz config] redis keyspace event", zap.String("key", key), zap.String("operation", op))
 
 	switch op {
 	case "set":
-		val, err := l.rc.Get(ctx, key).Result()
+		val, err := c.rc.Get(ctx, key).Result()
 		if err != nil {
-			l.logger.Error("[biz config] failed to get biz config from redis", zap.String("key", key), zap.Error(err))
+			c.logger.Error("[biz config] failed to get biz config from redis", zap.String("key", key), zap.Error(err))
 			return
 		}
 		// 更新本地缓存
-		l.cc.Set(key, val, cache.BizConfigDefaultLocalExp)
+		c.cc.Set(key, val, cache.BizConfigDefaultLocalExp)
 	case "del":
-		l.cc.Delete(key)
+		c.cc.Delete(key)
 	}
 }
 

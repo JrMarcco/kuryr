@@ -26,6 +26,10 @@ func (bc BizConfig) TableName() string {
 
 type BizConfigDao interface {
 	SaveOrUpdate(ctx context.Context, bizConfig BizConfig) (BizConfig, error)
+
+	Delete(ctx context.Context, id uint64) error
+
+	FindById(ctx context.Context, id uint64) (BizConfig, error)
 }
 
 var _ BizConfigDao = (*DefaultBizConfigDao)(nil)
@@ -54,6 +58,24 @@ func (d *DefaultBizConfigDao) SaveOrUpdate(ctx context.Context, bizConfig BizCon
 		return BizConfig{}, res.Error
 	}
 	return bizConfig, nil
+}
+
+func (d *DefaultBizConfigDao) Delete(ctx context.Context, id uint64) error {
+	res := d.db.WithContext(ctx).Model(&BizConfig{}).
+		Where("id = ?", id).
+		Delete(&BizConfig{})
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
+}
+
+func (d *DefaultBizConfigDao) FindById(ctx context.Context, id uint64) (BizConfig, error) {
+	var bizConfig BizConfig
+	err := d.db.WithContext(ctx).Model(&BizConfig{}).
+		Where("id = ?", id).
+		First(&bizConfig).Error
+	return bizConfig, err
 }
 
 func NewDefaultBizConfigDao(db *gorm.DB) *DefaultBizConfigDao {

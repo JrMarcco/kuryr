@@ -12,6 +12,8 @@ import (
 
 type BizConfigRepo interface {
 	Save(ctx context.Context, bizConfig domain.BizConfig) error
+	Delete(ctx context.Context, id uint64) error
+	GetById(ctx context.Context, id uint64) (domain.BizConfig, error)
 }
 
 var _ BizConfigRepo = (*DefaultBizConfigRepo)(nil)
@@ -44,6 +46,67 @@ func (r *DefaultBizConfigRepo) Save(ctx context.Context, bizConfig domain.BizCon
 		r.logger.Error("[biz config] failed to set biz config to local cache", zap.Error(err))
 	}
 	return nil
+}
+
+func (r *DefaultBizConfigRepo) Delete(ctx context.Context, id uint64) error {
+	// 删数据库
+	err := r.dao.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// 删 redis 缓存
+	err = r.redisCache.Del(ctx, id)
+	if err != nil {
+		r.logger.Error("[biz config] failed to del biz config from redis cache", zap.Error(err))
+	}
+
+	// 删本地缓存
+	err = r.localCache.Del(ctx, id)
+	if err != nil {
+		r.logger.Error("[biz config] failed to del biz config from local cache", zap.Error(err))
+	}
+	return nil
+}
+
+func (r *DefaultBizConfigRepo) GetById(ctx context.Context, id uint64) (domain.BizConfig, error) {
+	// 从本地缓存获取
+	bizConfig, err := r.localCache.Get(ctx, id)
+	if err == nil {
+		return bizConfig, nil
+	}
+
+	// 从 redis 获取
+	bizConfig, err = r.redisCache.Get(ctx, id)
+	if err == nil {
+		// 设置本地缓存
+		err = r.localCache.Set(ctx, bizConfig)
+		if err != nil {
+			r.logger.Error("[biz config] failed to set biz config to local cache", zap.Error(err))
+		}
+		return bizConfig, nil
+	}
+
+	// TODO: 如果这里触发熔断、降级可以直接返回
+
+	// 从 db 获取并设置 redis 缓存 + 本地缓存
+	entity, err := r.dao.FindById(ctx, id)
+	if err != nil {
+		return domain.BizConfig{}, err
+	}
+
+	bizConfig = r.toDomain(entity)
+	// 设置 redis 缓存
+	err = r.redisCache.Set(ctx, bizConfig)
+	if err != nil {
+		r.logger.Error("[biz config] failed to set biz config to redis cache", zap.Error(err))
+	}
+	// 设置本地缓存
+	err = r.localCache.Set(ctx, bizConfig)
+	if err != nil {
+		r.logger.Error("[biz config] failed to set biz config to local cache", zap.Error(err))
+	}
+	return bizConfig, nil
 }
 
 func (r *DefaultBizConfigRepo) toEntity(bizConfig domain.BizConfig) dao.BizConfig {
