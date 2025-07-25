@@ -149,9 +149,8 @@ func (s *BizConfigServer) domainToPb(bizConfig domain.BizConfig) *configv1.BizCo
 	}
 
 	if bizConfig.ChannelConfig != nil {
-		items := make([]*configv1.ChannelItem, len(bizConfig.ChannelConfig.Channels))
-		slice.Map(bizConfig.ChannelConfig.Channels, func(_ int, src domain.ChannelItem) configv1.ChannelItem {
-			return configv1.ChannelItem{
+		items := slice.Map(bizConfig.ChannelConfig.Channels, func(_ int, src domain.ChannelItem) *configv1.ChannelItem {
+			return &configv1.ChannelItem{
 				Channel:  src.Channel,
 				Priority: int32(src.Priority),
 				Enabled:  src.Enabled,
@@ -199,7 +198,6 @@ func (s *BizConfigServer) domainToPb(bizConfig domain.BizConfig) *configv1.BizCo
 			},
 		}
 	}
-
 	return pb
 }
 
