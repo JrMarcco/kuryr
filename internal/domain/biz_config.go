@@ -2,15 +2,26 @@ package domain
 
 import "github.com/JrMarcco/kuryr/internal/pkg/retry"
 
+// OwnerType 拥有者类型
+type OwnerType string
+
+const (
+	OwnerTypeIndividual   OwnerType = "individual"   // 个人
+	OwnerTypeOrganization OwnerType = "organization" // 组织
+)
+
+func (s OwnerType) String() string {
+	return string(s)
+}
+
 // BizConfig 业务方配置领域对象。
 type BizConfig struct {
 	Id             uint64          `json:"id"`
+	OwnerType      OwnerType       `json:"owner_type"`
 	ChannelConfig  *ChannelConfig  `json:"channel_config"` // 渠道配置
 	QuotaConfig    *QuotaConfig    `json:"quota_config"`   // 配额配置
 	CallbackConfig *CallbackConfig `json:"callback_config"`
 	RateLimit      int             `json:"rate_limit"`
-	CreatedAt      int64           `json:"created_at"`
-	UpdatedAt      int64           `json:"updated_at"`
 }
 
 type ChannelItem struct {

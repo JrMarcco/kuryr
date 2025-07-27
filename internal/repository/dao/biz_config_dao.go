@@ -11,16 +11,17 @@ import (
 )
 
 type BizConfig struct {
-	Id             uint64
-	ChannelConfig  xsql.JsonColumn[domain.ChannelConfig]  `gorm:"type:JSON"`
-	QuotaConfig    xsql.JsonColumn[domain.QuotaConfig]    `gorm:"type:JSON"`
-	CallbackConfig xsql.JsonColumn[domain.CallbackConfig] `gorm:"type:JSON"`
-	RateLimit      int
-	CreatedAt      int64
-	UpdatedAt      int64
+	Id             uint64                                 `gorm:"column:id"`
+	OwnerType      string                                 `gorm:"column:owner_type"`
+	ChannelConfig  xsql.JsonColumn[domain.ChannelConfig]  `gorm:"column:channel_config;type:JSON"`
+	QuotaConfig    xsql.JsonColumn[domain.QuotaConfig]    `gorm:"column:quota_config;type:JSON"`
+	CallbackConfig xsql.JsonColumn[domain.CallbackConfig] `gorm:"column:callback_config;type:JSON"`
+	RateLimit      int                                    `gorm:"column:rate_limit"`
+	CreatedAt      int64                                  `gorm:"column:created_at"`
+	UpdatedAt      int64                                  `gorm:"column:updated_at"`
 }
 
-func (bc BizConfig) TableName() string {
+func (BizConfig) TableName() string {
 	return "biz_config"
 }
 

@@ -112,9 +112,8 @@ func (r *DefaultBizConfigRepo) GetById(ctx context.Context, id uint64) (domain.B
 func (r *DefaultBizConfigRepo) toEntity(bizConfig domain.BizConfig) dao.BizConfig {
 	entity := dao.BizConfig{
 		Id:        bizConfig.Id,
+		OwnerType: bizConfig.OwnerType.String(),
 		RateLimit: bizConfig.RateLimit,
-		CreatedAt: bizConfig.CreatedAt,
-		UpdatedAt: bizConfig.UpdatedAt,
 	}
 
 	if bizConfig.ChannelConfig != nil {
@@ -144,9 +143,8 @@ func (r *DefaultBizConfigRepo) toEntity(bizConfig domain.BizConfig) dao.BizConfi
 func (r *DefaultBizConfigRepo) toDomain(entity dao.BizConfig) domain.BizConfig {
 	bizConfig := domain.BizConfig{
 		Id:        entity.Id,
+		OwnerType: domain.OwnerType(entity.OwnerType),
 		RateLimit: entity.RateLimit,
-		CreatedAt: entity.CreatedAt,
-		UpdatedAt: entity.UpdatedAt,
 	}
 
 	if entity.ChannelConfig.Valid {

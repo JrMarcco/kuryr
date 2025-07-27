@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"context"
+	"fmt"
 
 	kuryrapi "github.com/JrMarcco/kuryr-api/api"
 	"github.com/JrMarcco/kuryr/internal/errs"
@@ -15,11 +16,11 @@ const (
 func ContextBizId(ctx context.Context) (uint64, error) {
 	val := ctx.Value(kuryrapi.ContextKeyBizId{})
 	if val == nil {
-		return 0, errs.ErrInvalidBizId
+		return 0, fmt.Errorf("%w: biz id is nil", errs.ErrInvalidParam)
 	}
 	bizId, ok := val.(uint64)
 	if !ok {
-		return 0, errs.ErrInvalidBizId
+		return 0, fmt.Errorf("%w: biz id is not uint64", errs.ErrInvalidParam)
 	}
 	return bizId, nil
 }

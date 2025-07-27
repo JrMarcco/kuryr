@@ -42,6 +42,7 @@ func (s *BizConfigServer) Save(ctx context.Context, request *configv1.SaveReques
 func (s *BizConfigServer) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {
 	bizConfig := domain.BizConfig{
 		Id:        pb.BizId,
+		OwnerType: domain.OwnerType(pb.OwnerType),
 		RateLimit: int(pb.RateLimit),
 	}
 
@@ -138,13 +139,10 @@ func (s *BizConfigServer) GetById(ctx context.Context, req *configv1.GetByIdRequ
 	return &configv1.GetByIdResponse{Config: s.domainToPb(bizConfig)}, nil
 }
 
-func (s *BizConfigServer) GetByIds(ctx context.Context, req *configv1.GetByIdsRequest) (*configv1.GetByIdsResponse, error) {
-	panic("implement me")
-}
-
 func (s *BizConfigServer) domainToPb(bizConfig domain.BizConfig) *configv1.BizConfig {
 	pb := &configv1.BizConfig{
 		BizId:     bizConfig.Id,
+		OwnerType: bizConfig.OwnerType.String(),
 		RateLimit: int32(bizConfig.RateLimit),
 	}
 
