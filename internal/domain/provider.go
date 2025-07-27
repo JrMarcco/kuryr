@@ -19,7 +19,11 @@ func (c Channel) String() string {
 }
 
 func (c Channel) IsValid() bool {
-	return c == ChannelSms || c == ChannelEmail
+	switch c {
+	case ChannelSms, ChannelEmail:
+		return true
+	}
+	return false
 }
 
 func (c Channel) IsSms() bool {

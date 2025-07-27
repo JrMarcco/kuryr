@@ -14,6 +14,14 @@ func (s OwnerType) String() string {
 	return string(s)
 }
 
+func (s OwnerType) IsValid() bool {
+	switch s {
+	case OwnerTypeIndividual, OwnerTypeOrganization:
+		return true
+	}
+	return false
+}
+
 // BizConfig 业务方配置领域对象。
 type BizConfig struct {
 	Id             uint64          `json:"id"`
