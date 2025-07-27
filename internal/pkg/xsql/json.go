@@ -21,7 +21,7 @@ func (j JsonColumn[T]) Value() (driver.Value, error) {
 	}
 
 	res, err := json.Marshal(j.Val)
-	return res, err
+	return string(res), err
 }
 
 //goland:noinspection GoMixedReceiverTypes

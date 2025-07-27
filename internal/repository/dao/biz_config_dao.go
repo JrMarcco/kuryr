@@ -12,9 +12,9 @@ import (
 
 type BizConfig struct {
 	Id             uint64
-	ChannelConfig  xsql.JsonColumn[domain.ChannelConfig]  `gorm:"type:json;serializer:json"`
-	QuotaConfig    xsql.JsonColumn[domain.QuotaConfig]    `gorm:"type:json;serializer:json"`
-	CallbackConfig xsql.JsonColumn[domain.CallbackConfig] `gorm:"type:json;serializer:json"`
+	ChannelConfig  xsql.JsonColumn[domain.ChannelConfig]  `gorm:"type:JSON"`
+	QuotaConfig    xsql.JsonColumn[domain.QuotaConfig]    `gorm:"type:JSON"`
+	CallbackConfig xsql.JsonColumn[domain.CallbackConfig] `gorm:"type:JSON"`
 	RateLimit      int
 	CreatedAt      int64
 	UpdatedAt      int64
