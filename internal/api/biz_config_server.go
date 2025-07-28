@@ -14,7 +14,7 @@ import (
 
 type BizConfigServer struct {
 	configv1.UnimplementedBizConfigServiceServer
-	svc bizconf.BizConfigService
+	svc bizconf.Service
 }
 
 func (s *BizConfigServer) Save(ctx context.Context, request *configv1.SaveRequest) (*configv1.SaveResponse, error) {
@@ -199,7 +199,7 @@ func (s *BizConfigServer) domainToPb(bizConfig domain.BizConfig) *configv1.BizCo
 	return pb
 }
 
-func NewBizConfigServer(svc bizconf.BizConfigService) *BizConfigServer {
+func NewBizConfigServer(svc bizconf.Service) *BizConfigServer {
 	return &BizConfigServer{
 		svc: svc,
 	}

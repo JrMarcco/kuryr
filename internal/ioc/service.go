@@ -9,8 +9,8 @@ var ServiceFxOpt = fx.Options(
 	fx.Provide(
 		// biz config service
 		fx.Annotate(
-			bizconf.NewDefaultBizConfigService,
-			fx.As(new(bizconf.BizConfigService)),
+			bizconf.NewDefaultService,
+			fx.As(new(bizconf.Service)),
 		),
 	),
 )

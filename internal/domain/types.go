@@ -3,6 +3,15 @@ package domain
 // ActiveStatus 状态
 type ActiveStatus string
 
+const (
+	ActiveStatusActive   ActiveStatus = "active"
+	ActiveStatusInactive ActiveStatus = "inactive"
+)
+
+func (s ActiveStatus) String() string {
+	return string(s)
+}
+
 // AuditStatus 审核状态
 type AuditStatus string
 

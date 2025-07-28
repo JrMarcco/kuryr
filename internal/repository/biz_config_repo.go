@@ -2,12 +2,16 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/JrMarcco/kuryr/internal/domain"
+	"github.com/JrMarcco/kuryr/internal/errs"
 	"github.com/JrMarcco/kuryr/internal/pkg/xsql"
 	"github.com/JrMarcco/kuryr/internal/repository/cache"
 	"github.com/JrMarcco/kuryr/internal/repository/dao"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type BizConfigRepo interface {
@@ -92,6 +96,9 @@ func (r *DefaultBizConfigRepo) GetById(ctx context.Context, id uint64) (domain.B
 	// 从 db 获取并设置 redis 缓存 + 本地缓存
 	entity, err := r.dao.FindById(ctx, id)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.BizConfig{}, fmt.Errorf("%w: can not find biz config", errs.ErrRecordNotFound)
+		}
 		return domain.BizConfig{}, err
 	}
 

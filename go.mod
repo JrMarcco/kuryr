@@ -16,6 +16,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.etcd.io/etcd/client/v3 v3.6.4
 	go.uber.org/fx v1.24.0
+	go.uber.org/mock v0.5.2
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.74.2
 	gorm.io/driver/postgres v1.6.0

@@ -12,35 +12,35 @@ import (
 
 var ErrInvalidBizId = errors.New("[kuryr] biz id (owner_id) not set")
 
-type BizConfigService interface {
+type Service interface {
 	Save(ctx context.Context, bizConfig domain.BizConfig) error
 	Delete(ctx context.Context, id uint64) error
 	GetById(ctx context.Context, id uint64) (domain.BizConfig, error)
 }
 
-var _ BizConfigService = (*DefaultBizConfigService)(nil)
+var _ Service = (*DefaultService)(nil)
 
-type DefaultBizConfigService struct {
+type DefaultService struct {
 	repo repository.BizConfigRepo
 }
 
-func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.BizConfig) error {
+func (s *DefaultService) Save(ctx context.Context, bizConfig domain.BizConfig) error {
 	if bizConfig.Id == 0 {
 		return ErrInvalidBizId
 	}
 	return s.repo.Save(ctx, bizConfig)
 }
 
-func (s *DefaultBizConfigService) Delete(ctx context.Context, id uint64) error {
+func (s *DefaultService) Delete(ctx context.Context, id uint64) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *DefaultBizConfigService) GetById(ctx context.Context, id uint64) (domain.BizConfig, error) {
+func (s *DefaultService) GetById(ctx context.Context, id uint64) (domain.BizConfig, error) {
 	return s.repo.GetById(ctx, id)
 }
 
-func NewDefaultBizConfigService(repo repository.BizConfigRepo) *DefaultBizConfigService {
-	return &DefaultBizConfigService{
+func NewDefaultService(repo repository.BizConfigRepo) *DefaultService {
+	return &DefaultService{
 		repo: repo,
 	}
 }
