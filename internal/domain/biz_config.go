@@ -22,7 +22,7 @@ func (s OwnerType) IsValid() bool {
 	return false
 }
 
-// BizConfig 业务方配置领域对象。
+// BizConfig 业务方配置领域对象
 type BizConfig struct {
 	Id             uint64          `json:"id"`
 	OwnerType      OwnerType       `json:"owner_type"`

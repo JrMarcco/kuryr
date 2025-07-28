@@ -34,7 +34,7 @@ func (c Channel) IsEmail() bool {
 	return c == ChannelEmail
 }
 
-// Provider 供应商信息
+// Provider 供应商信息领域对象
 type Provider struct {
 	Id           uint64  `json:"id"`
 	ProviderName string  `json:"provider_name"` // 供应商名称

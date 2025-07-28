@@ -70,9 +70,9 @@ func (ChannelTemplateProvider) TableName() string {
 	return "channel_template_provider"
 }
 
-type TemplateDao interface {
+type ChannelTplDao interface {
 }
 
-var _ TemplateDao = (*DefaultTemplateDao)(nil)
+var _ ChannelTplDao = (*DefaultChannelTplDao)(nil)
 
-type DefaultTemplateDao struct{}
+type DefaultChannelTplDao struct{}

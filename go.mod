@@ -14,6 +14,8 @@ require (
 	github.com/spf13/pflag v1.0.7
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.1215
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.1200
 	go.etcd.io/etcd/client/v3 v3.6.4
 	go.uber.org/fx v1.24.0
 	go.uber.org/mock v0.5.2

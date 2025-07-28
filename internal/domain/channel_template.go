@@ -33,7 +33,7 @@ func (n NotificationType) String() string {
 	}
 }
 
-// ChannelTemplate 渠道模板
+// ChannelTemplate 渠道模板领域对象
 type ChannelTemplate struct {
 	Id        uint64    `json:"id"`
 	OwnerId   uint64    `json:"owner_id"`   // 拥有者 id，即 biz_id
@@ -129,7 +129,7 @@ func (t ChannelTemplate) GetProvider(versionId, providerId uint64) *ChannelTempl
 	return nil
 }
 
-// ChannelTemplateVersion 渠道模板版本信息
+// ChannelTemplateVersion 渠道模板版本信息领域对象
 type ChannelTemplateVersion struct {
 	Id    uint64 `json:"id"`
 	TplId uint64 `json:"tpl_id"` // 模板 id
@@ -152,7 +152,7 @@ type ChannelTemplateVersion struct {
 	Providers []ChannelTemplateProvider `json:"providers"` // 关联供应商
 }
 
-// ChannelTemplateProvider 渠道模板供应商
+// ChannelTemplateProvider 渠道模板供应商领域对象
 type ChannelTemplateProvider struct {
 	Id           uint64 `json:"id"`
 	TplId        uint64 `json:"tpl_id"`         // 模板 id
