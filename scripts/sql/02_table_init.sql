@@ -23,7 +23,7 @@ COMMENT ON COLUMN biz_config.updated_at IS '更新时间戳 ( Unix 毫秒值 )';
 
 DROP TABLE IF EXISTS provider_info;
 CREATE TABLE provider_info (
-    id BIGINT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     provider_name VARCHAR(128) NOT NULL,
     channel channel_enum NOT NULL,
     endpoint VARCHAR(128) NOT NULL,

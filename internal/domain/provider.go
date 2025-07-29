@@ -6,34 +6,6 @@ import (
 	"github.com/JrMarcco/kuryr/internal/errs"
 )
 
-// Channel 通知渠道
-type Channel string
-
-const (
-	ChannelSms   Channel = "sms"
-	ChannelEmail Channel = "email"
-)
-
-func (c Channel) String() string {
-	return string(c)
-}
-
-func (c Channel) IsValid() bool {
-	switch c {
-	case ChannelSms, ChannelEmail:
-		return true
-	}
-	return false
-}
-
-func (c Channel) IsSms() bool {
-	return c == ChannelSms
-}
-
-func (c Channel) IsEmail() bool {
-	return c == ChannelEmail
-}
-
 // Provider 供应商信息领域对象
 type Provider struct {
 	Id           uint64  `json:"id"`
@@ -56,7 +28,7 @@ type Provider struct {
 	ActiveStatus ActiveStatus `json:"active_status"` // 状态
 }
 
-func (p *Provider) IsValid() error {
+func (p *Provider) Validate() error {
 	if p.ProviderName == "" {
 		return fmt.Errorf("%w: provider name can not be empty", errs.ErrInvalidParam)
 	}

@@ -45,7 +45,10 @@ func (Provider) TableName() string {
 
 type ProviderDao interface {
 	Save(ctx context.Context, provider Provider) error
+	Delete(ctx context.Context, id uint64) error
 	Update(ctx context.Context, provider Provider) error
+
+	ListAll(ctx context.Context) ([]Provider, error)
 	FindById(ctx context.Context, id uint64) (Provider, error)
 	FindByChannel(ctx context.Context, channel string) ([]Provider, error)
 }
@@ -94,6 +97,12 @@ func (d *DefaultProviderDao) encrypt(plainText string) (string, error) {
 	return base64.StdEncoding.EncodeToString(cipherText), nil
 }
 
+func (d *DefaultProviderDao) Delete(ctx context.Context, id uint64) error {
+	return d.db.WithContext(ctx).Model(&Provider{}).
+		Where("id = ?", id).
+		Delete(&Provider{}).Error
+}
+
 func (d *DefaultProviderDao) Update(ctx context.Context, provider Provider) error {
 	provider.UpdatedAt = time.Now().UnixMilli()
 
@@ -122,6 +131,13 @@ func (d *DefaultProviderDao) Update(ctx context.Context, provider Provider) erro
 	return d.db.WithContext(ctx).Model(&Provider{}).
 		Where("id = ?", provider.Id).
 		Updates(values).Error
+}
+
+func (d *DefaultProviderDao) ListAll(ctx context.Context) ([]Provider, error) {
+	var providers []Provider
+	err := d.db.WithContext(ctx).Model(&Provider{}).
+		Find(&providers).Error
+	return providers, err
 }
 
 func (d *DefaultProviderDao) FindById(ctx context.Context, id uint64) (Provider, error) {

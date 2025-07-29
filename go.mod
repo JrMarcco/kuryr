@@ -6,7 +6,7 @@ require (
 	github.com/JrMarcco/dlock v0.0.2
 	github.com/JrMarcco/easy-grpc v0.0.13
 	github.com/JrMarcco/easy-kit v0.0.7
-	github.com/JrMarcco/kuryr-api v0.0.9
+	github.com/JrMarcco/kuryr-api v0.0.12
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/golang-jwt/jwt/v5 v5.2.3
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -14,7 +14,7 @@ require (
 	github.com/spf13/pflag v1.0.7
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.1215
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.1217
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.1200
 	go.etcd.io/etcd/client/v3 v3.6.4
 	go.uber.org/fx v1.24.0
@@ -58,8 +58,8 @@ require (
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250721164621-a45f3dfb1074 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250721164621-a45f3dfb1074 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250728155136-f173205681a0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250728155136-f173205681a0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

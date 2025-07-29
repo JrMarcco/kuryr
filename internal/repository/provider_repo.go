@@ -14,7 +14,10 @@ import (
 
 type ProviderRepo interface {
 	Save(ctx context.Context, provider domain.Provider) error
+	Delete(ctx context.Context, id uint64) error
 	Update(ctx context.Context, provider domain.Provider) error
+
+	ListAll(ctx context.Context) ([]domain.Provider, error)
 	FindById(ctx context.Context, id uint64) (domain.Provider, error)
 	FindByChannel(ctx context.Context, channel string) ([]domain.Provider, error)
 }
@@ -29,8 +32,25 @@ func (r *DefaultProviderRepo) Save(ctx context.Context, provider domain.Provider
 	return r.dao.Save(ctx, r.toEntity(provider))
 }
 
+func (r *DefaultProviderRepo) Delete(ctx context.Context, id uint64) error {
+	return r.dao.Delete(ctx, id)
+}
+
 func (r *DefaultProviderRepo) Update(ctx context.Context, provider domain.Provider) error {
 	return r.dao.Update(ctx, r.toEntity(provider))
+}
+
+func (r *DefaultProviderRepo) ListAll(ctx context.Context) ([]domain.Provider, error) {
+	entities, err := r.dao.ListAll(ctx)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return []domain.Provider{}, nil
+		}
+		return nil, err
+	}
+	return slice.Map(entities, func(_ int, src dao.Provider) domain.Provider {
+		return r.toDomain(src)
+	}), nil
 }
 
 func (r *DefaultProviderRepo) FindById(ctx context.Context, id uint64) (domain.Provider, error) {

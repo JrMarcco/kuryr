@@ -12,8 +12,9 @@ import (
 	"github.com/JrMarcco/kuryr/internal/service/bizconf"
 )
 
+var _ configv1.BizConfigServiceServer = (*BizConfigServer)(nil)
+
 type BizConfigServer struct {
-	configv1.UnimplementedBizConfigServiceServer
 	svc bizconf.Service
 }
 
@@ -128,15 +129,15 @@ func (s *BizConfigServer) Delete(ctx context.Context, request *configv1.DeleteRe
 	return &configv1.DeleteResponse{Success: true}, nil
 }
 
-func (s *BizConfigServer) GetById(ctx context.Context, req *configv1.GetByIdRequest) (*configv1.GetByIdResponse, error) {
+func (s *BizConfigServer) FindById(ctx context.Context, req *configv1.FindByIdRequest) (*configv1.FindByIdResponse, error) {
 	if req.Id == 0 {
-		return &configv1.GetByIdResponse{}, fmt.Errorf("[kuryr] biz id is invalid: %d", req.Id)
+		return &configv1.FindByIdResponse{}, fmt.Errorf("[kuryr] biz id is invalid: %d", req.Id)
 	}
 	bizConfig, err := s.svc.GetById(ctx, req.Id)
 	if err != nil {
-		return &configv1.GetByIdResponse{}, fmt.Errorf("[kuryr] failed to get biz config by id: %w", err)
+		return &configv1.FindByIdResponse{}, fmt.Errorf("[kuryr] failed to get biz config by id: %w", err)
 	}
-	return &configv1.GetByIdResponse{Config: s.domainToPb(bizConfig)}, nil
+	return &configv1.FindByIdResponse{Config: s.domainToPb(bizConfig)}, nil
 }
 
 func (s *BizConfigServer) domainToPb(bizConfig domain.BizConfig) *configv1.BizConfig {
