@@ -2,13 +2,17 @@ package ioc
 
 import (
 	"sync"
+	"time"
 
 	"github.com/JrMarcco/easy-kit/xsync"
+	pkggorm "github.com/JrMarcco/kuryr/internal/pkg/gorm"
 	"github.com/JrMarcco/kuryr/internal/pkg/sharding"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DBFxOpt = fx.Provide(
@@ -27,31 +31,80 @@ var (
 )
 
 // InitBaseDB 初始化基础 db ( kuryr )
-func InitBaseDB() *gorm.DB {
-	type config struct {
+func InitBaseDB(zLogger *zap.Logger) *gorm.DB {
+	type baseConfig struct {
 		DSN string `mapstructure:"dsn"`
 	}
+
+	type config struct {
+		LogLevel                  string     `mapstructure:"log_level"`
+		SlowThreshold             int        `mapstructure:"slow_threshold"`
+		IgnoreRecordNotFoundError bool       `mapstructure:"ignore_record_not_found_error"`
+		Base                      baseConfig `mapstructure:"base"`
+	}
 	cfg := config{}
-	if err := viper.UnmarshalKey("db.base", &cfg); err != nil {
+	if err := viper.UnmarshalKey("db", &cfg); err != nil {
 		panic(err)
 	}
 
-	db, err := gorm.Open(postgres.Open(cfg.DSN), &gorm.Config{})
+	var level logger.LogLevel
+	switch cfg.LogLevel {
+	case "silent":
+		level = logger.Silent
+	case "error":
+		level = logger.Error
+	case "warn":
+		level = logger.Warn
+	case "info":
+		level = logger.Info
+	default:
+		panic("invalid logger level")
+	}
+
+	db, err := gorm.Open(postgres.Open(cfg.Base.DSN), &gorm.Config{
+		Logger: pkggorm.NewZapLogger(
+			zLogger,
+			pkggorm.WithLogLevel(level),
+			pkggorm.WithSlowThreshold(time.Duration(cfg.SlowThreshold)*time.Millisecond),
+			pkggorm.WithIgnoreRecordNotFoundError(cfg.IgnoreRecordNotFoundError),
+		),
+	})
 	if err != nil {
 		panic(err)
 	}
 	return db
 }
 
-func InitShardingDB() *xsync.Map[string, *gorm.DB] {
-	type config struct {
-		DSN string `mapstructure:"dsn"`
+func InitShardingDB(zLogger *zap.Logger) *xsync.Map[string, *gorm.DB] {
+	type shardingConfig struct {
+		Name string `mapstructure:"name"`
+		DSN  string `mapstructure:"dsn"`
 	}
 
-	type allConfig map[string]config
-	allCfg := make(allConfig)
-	if err := viper.UnmarshalKey("db.sharding", &allCfg); err != nil {
+	type config struct {
+		LogLevel                  string           `mapstructure:"log_level"`
+		SlowThreshold             int              `mapstructure:"slow_threshold"`
+		IgnoreRecordNotFoundError bool             `mapstructure:"ignore_record_not_found_error"`
+		Sharding                  []shardingConfig `mapstructure:"sharding"`
+	}
+
+	cfg := config{}
+	if err := viper.UnmarshalKey("db", &cfg); err != nil {
 		panic(err)
+	}
+
+	var level logger.LogLevel
+	switch cfg.LogLevel {
+	case "silent":
+		level = logger.Silent
+	case "error":
+		level = logger.Error
+	case "warn":
+		level = logger.Warn
+	case "info":
+		level = logger.Info
+	default:
+		panic("invalid log level")
 	}
 
 	mu.Lock()
@@ -59,12 +112,19 @@ func InitShardingDB() *xsync.Map[string, *gorm.DB] {
 
 	var dbs xsync.Map[string, *gorm.DB]
 	once.Do(func() {
-		for key, cfg := range allCfg {
-			db, err := gorm.Open(postgres.Open(cfg.DSN), &gorm.Config{})
+		for _, s := range cfg.Sharding {
+			db, err := gorm.Open(postgres.Open(s.DSN), &gorm.Config{
+				Logger: pkggorm.NewZapLogger(
+					zLogger,
+					pkggorm.WithLogLevel(level),
+					pkggorm.WithSlowThreshold(time.Duration(cfg.SlowThreshold)*time.Millisecond),
+					pkggorm.WithIgnoreRecordNotFoundError(cfg.IgnoreRecordNotFoundError),
+				),
+			})
 			if err != nil {
 				panic(err)
 			}
-			dbs.Store(key, db)
+			dbs.Store(s.Name, db)
 		}
 	})
 

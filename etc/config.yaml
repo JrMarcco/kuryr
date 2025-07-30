@@ -36,13 +36,16 @@ redis:
   password: "<passwd>"
 
 db:
+  log_level: "info"
+  slow_threshold: 200 # 慢查询阈值，单位：毫秒
+  ignore_record_not_found_error: true
   base:
     # sslmode=disable 用于开发环境，线上一般推荐使用 sslmode=require / sslmode=verify-ca(更高安全性) / sslmode=verify-full (最高安全性)
     dsn: "postgres://jrmarcco:%3Cpasswd%3E@192.168.3.3:5432/kuryr?sslmode=disable&connect_timeout=1&statement_timeout=3000&idle_in_transaction_session_timeout=3000"
   sharding:
-    kuryr_01:
+    - name: "kuryr_01"
       dsn: "postgres://jrmarcco:%3Cpasswd%3E@192.168.3.3:5432/kuryr_01?sslmode=disable&connect_timeout=1&statement_timeout=3000&idle_in_transaction_session_timeout=3000"
-    kuryr_02:
+    - name: "kuryr_02"
       dsn: "postgres://jrmarcco:%3Cpasswd%3E@192.168.3.3:5432/kuryr_02?sslmode=disable&connect_timeout=1&statement_timeout=3000&idle_in_transaction_session_timeout=3000"
 
 provider:

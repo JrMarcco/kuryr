@@ -15,9 +15,9 @@ type Provider struct {
 	Endpoint string `json:"endpoint"`  // 接口地址
 	RegionId string `json:"region_id"` // 区域 ID
 
-	AppId     string `json:"app_id"`     // 应用 ID
-	ApiKey    string `json:"api_key"`    // 接口密钥
-	ApiSecret string `json:"api_secret"` // 接口密钥
+	AppId     string `json:"app_id"`     // 应用 id
+	ApiKey    string `json:"api_key"`    // 接口 key
+	ApiSecret string `json:"api_secret"` // 接口 secret
 
 	Weight     int `json:"weight"`      // 权重
 	QpsLimit   int `json:"qps_limit"`   // 每秒请求限制
