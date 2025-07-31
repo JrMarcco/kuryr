@@ -19,9 +19,9 @@ type Provider struct {
 	ApiKey    string `json:"api_key"`    // 接口 key
 	ApiSecret string `json:"api_secret"` // 接口 secret
 
-	Weight     int `json:"weight"`      // 权重
-	QpsLimit   int `json:"qps_limit"`   // 每秒请求限制
-	DailyLimit int `json:"daily_limit"` // 每日请求限制
+	Weight     int32 `json:"weight"`      // 权重
+	QpsLimit   int32 `json:"qps_limit"`   // 每秒请求限制
+	DailyLimit int32 `json:"daily_limit"` // 每日请求限制
 
 	AuditCallbackUrl string `json:"audit_callback_url"` // 审核回调地址
 

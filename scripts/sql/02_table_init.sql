@@ -20,7 +20,6 @@ COMMENT ON COLUMN biz_config.rate_limit IS '限流阈值 ( requests/s ) 0 表示
 COMMENT ON COLUMN biz_config.created_at IS '创建时间戳 ( Unix 毫秒值 )';
 COMMENT ON COLUMN biz_config.updated_at IS '更新时间戳 ( Unix 毫秒值 )';
 
-
 DROP TABLE IF EXISTS provider_info;
 CREATE TABLE provider_info (
     id BIGSERIAL PRIMARY KEY,

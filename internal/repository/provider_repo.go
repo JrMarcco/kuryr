@@ -8,7 +8,9 @@ import (
 	"github.com/JrMarcco/easy-kit/slice"
 	"github.com/JrMarcco/kuryr/internal/domain"
 	"github.com/JrMarcco/kuryr/internal/errs"
+	pkggorm "github.com/JrMarcco/kuryr/internal/pkg/gorm"
 	"github.com/JrMarcco/kuryr/internal/repository/dao"
+	"github.com/JrMarcco/kuryr/internal/search"
 	"gorm.io/gorm"
 )
 
@@ -17,7 +19,7 @@ type ProviderRepo interface {
 	Delete(ctx context.Context, id uint64) error
 	Update(ctx context.Context, provider domain.Provider) error
 
-	ListAll(ctx context.Context) ([]domain.Provider, error)
+	Search(ctx context.Context, criteria search.ProviderCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.Provider], error)
 	FindById(ctx context.Context, id uint64) (domain.Provider, error)
 	FindByChannel(ctx context.Context, channel string) ([]domain.Provider, error)
 }
@@ -40,17 +42,23 @@ func (r *DefaultProviderRepo) Update(ctx context.Context, provider domain.Provid
 	return r.dao.Update(ctx, r.toEntity(provider))
 }
 
-func (r *DefaultProviderRepo) ListAll(ctx context.Context) ([]domain.Provider, error) {
-	entities, err := r.dao.ListAll(ctx)
+func (r *DefaultProviderRepo) Search(ctx context.Context, criteria search.ProviderCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.Provider], error) {
+	res, err := r.dao.Search(ctx, criteria, param)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return []domain.Provider{}, nil
+			return pkggorm.NewPaginationResult[domain.Provider]([]domain.Provider{}, 0), nil
 		}
 		return nil, err
 	}
-	return slice.Map(entities, func(_ int, src dao.Provider) domain.Provider {
+
+	if res.Total == 0 {
+		return pkggorm.NewPaginationResult[domain.Provider]([]domain.Provider{}, 0), nil
+	}
+
+	providers := slice.Map(res.Records, func(_ int, src dao.Provider) domain.Provider {
 		return r.toDomain(src)
-	}), nil
+	})
+	return pkggorm.NewPaginationResult[domain.Provider](providers, res.Total), nil
 }
 
 func (r *DefaultProviderRepo) FindById(ctx context.Context, id uint64) (domain.Provider, error) {
@@ -81,7 +89,7 @@ func (r *DefaultProviderRepo) toEntity(provider domain.Provider) dao.Provider {
 	return dao.Provider{
 		Id:               provider.Id,
 		ProviderName:     provider.ProviderName,
-		Channel:          provider.Channel.String(),
+		Channel:          int32(provider.Channel),
 		Endpoint:         provider.Endpoint,
 		AppId:            provider.AppId,
 		ApiKey:           provider.ApiKey,
@@ -90,7 +98,7 @@ func (r *DefaultProviderRepo) toEntity(provider domain.Provider) dao.Provider {
 		QpsLimit:         provider.QpsLimit,
 		DailyLimit:       provider.DailyLimit,
 		AuditCallbackUrl: provider.AuditCallbackUrl,
-		ActiveStatus:     provider.ActiveStatus.String(),
+		ActiveStatus:     string(provider.ActiveStatus),
 	}
 }
 

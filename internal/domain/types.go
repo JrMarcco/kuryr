@@ -1,23 +1,22 @@
 package domain
 
 // Channel 通知渠道
-type Channel string
+type Channel int32
 
+//goland:noinspection GoUnusedConst
 const (
-	ChannelSms   Channel = "sms"
-	ChannelEmail Channel = "email"
+	ChannelUnspecified Channel = 0 + iota
+	ChannelSms
+	ChannelEmail
 )
-
-func (c Channel) String() string {
-	return string(c)
-}
 
 func (c Channel) IsValid() bool {
 	switch c {
 	case ChannelSms, ChannelEmail:
 		return true
+	default:
+		return false
 	}
-	return false
 }
 
 func (c Channel) IsSms() bool {
@@ -35,10 +34,6 @@ const (
 	ActiveStatusActive   ActiveStatus = "active"
 	ActiveStatusInactive ActiveStatus = "inactive"
 )
-
-func (s ActiveStatus) String() string {
-	return string(s)
-}
 
 // AuditStatus 审核状态
 type AuditStatus string
@@ -58,8 +53,9 @@ func (s AuditStatus) IsValid() bool {
 	switch s {
 	case AuditStatusPending, AuditStatusAuditing, AuditStatusApproved, AuditStatusRejected:
 		return true
+	default:
+		return false
 	}
-	return false
 }
 
 func (s AuditStatus) IsPending() bool {

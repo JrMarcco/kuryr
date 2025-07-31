@@ -2,12 +2,15 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/JrMarcco/easy-kit/slice"
+	commonv1 "github.com/JrMarcco/kuryr-api/api/common/v1"
 	configv1 "github.com/JrMarcco/kuryr-api/api/config/v1"
 	"github.com/JrMarcco/kuryr/internal/domain"
+	"github.com/JrMarcco/kuryr/internal/errs"
 	"github.com/JrMarcco/kuryr/internal/pkg/retry"
 	"github.com/JrMarcco/kuryr/internal/service/bizconf"
 )
@@ -44,7 +47,7 @@ func (s *BizConfigServer) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {
 	bizConfig := domain.BizConfig{
 		Id:        pb.BizId,
 		OwnerType: domain.OwnerType(pb.OwnerType),
-		RateLimit: int(pb.RateLimit),
+		RateLimit: pb.RateLimit,
 	}
 
 	if pb.ChannelConfig != nil {
@@ -54,8 +57,8 @@ func (s *BizConfigServer) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {
 
 		for index, item := range pb.ChannelConfig.Items {
 			channelConfig.Channels[index] = domain.ChannelItem{
-				Channel:  item.Channel,
-				Priority: int(item.Priority),
+				Channel:  domain.Channel(item.Channel),
+				Priority: item.Priority,
 				Enabled:  item.Enabled,
 			}
 		}
@@ -72,14 +75,14 @@ func (s *BizConfigServer) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {
 		if pb.QuotaConfig.Daily != nil {
 			dailyQuota := pb.QuotaConfig.Daily
 			quotaConfig.Daily = &domain.Quota{
-				SMS:   dailyQuota.Sms,
+				Sms:   dailyQuota.Sms,
 				Email: dailyQuota.Email,
 			}
 		}
 		if pb.QuotaConfig.Monthly != nil {
 			monthlyQuota := pb.QuotaConfig.Monthly
 			quotaConfig.Monthly = &domain.Quota{
-				SMS:   monthlyQuota.Sms,
+				Sms:   monthlyQuota.Sms,
 				Email: monthlyQuota.Email,
 			}
 		}
@@ -133,9 +136,15 @@ func (s *BizConfigServer) FindById(ctx context.Context, req *configv1.FindByIdRe
 	if req.Id == 0 {
 		return &configv1.FindByIdResponse{}, fmt.Errorf("[kuryr] biz id is invalid: %d", req.Id)
 	}
+
 	bizConfig, err := s.svc.GetById(ctx, req.Id)
 	if err != nil {
-		return &configv1.FindByIdResponse{}, fmt.Errorf("[kuryr] failed to get biz config by id: %w", err)
+		if errors.Is(err, errs.ErrRecordNotFound) {
+			return &configv1.FindByIdResponse{
+				ErrCode: commonv1.ErrCode_BIZ_CONFIG_NOT_FOUND,
+			}, nil
+		}
+		return &configv1.FindByIdResponse{}, fmt.Errorf("%w: failed to get biz config by id", err)
 	}
 	return &configv1.FindByIdResponse{Config: s.domainToPb(bizConfig)}, nil
 }
@@ -143,15 +152,15 @@ func (s *BizConfigServer) FindById(ctx context.Context, req *configv1.FindByIdRe
 func (s *BizConfigServer) domainToPb(bizConfig domain.BizConfig) *configv1.BizConfig {
 	pb := &configv1.BizConfig{
 		BizId:     bizConfig.Id,
-		OwnerType: bizConfig.OwnerType.String(),
-		RateLimit: int32(bizConfig.RateLimit),
+		OwnerType: string(bizConfig.OwnerType),
+		RateLimit: bizConfig.RateLimit,
 	}
 
 	if bizConfig.ChannelConfig != nil {
 		items := slice.Map(bizConfig.ChannelConfig.Channels, func(_ int, src domain.ChannelItem) *configv1.ChannelItem {
 			return &configv1.ChannelItem{
-				Channel:  src.Channel,
-				Priority: int32(src.Priority),
+				Channel:  commonv1.Channel(src.Channel),
+				Priority: src.Priority,
 				Enabled:  src.Enabled,
 			}
 		})
@@ -172,14 +181,14 @@ func (s *BizConfigServer) domainToPb(bizConfig domain.BizConfig) *configv1.BizCo
 		if bizConfig.QuotaConfig.Daily != nil {
 			dailyQuota := bizConfig.QuotaConfig.Daily
 			quotaConfig.Daily = &configv1.Quota{
-				Sms:   dailyQuota.SMS,
+				Sms:   dailyQuota.Sms,
 				Email: dailyQuota.Email,
 			}
 		}
 		if bizConfig.QuotaConfig.Monthly != nil {
 			monthlyQuota := bizConfig.QuotaConfig.Monthly
 			quotaConfig.Monthly = &configv1.Quota{
-				Sms:   monthlyQuota.SMS,
+				Sms:   monthlyQuota.Sms,
 				Email: monthlyQuota.Email,
 			}
 		}

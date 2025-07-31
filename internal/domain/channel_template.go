@@ -12,10 +12,6 @@ const (
 	NotificationTypeVerifyCode = 0
 )
 
-func (n NotificationType) Uint8() uint8 {
-	return uint8(n)
-}
-
 func (n NotificationType) IsValid() bool {
 	switch n {
 	case NotificationTypeVerifyCode:

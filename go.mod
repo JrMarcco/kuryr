@@ -6,7 +6,7 @@ require (
 	github.com/JrMarcco/dlock v0.0.2
 	github.com/JrMarcco/easy-grpc v0.0.13
 	github.com/JrMarcco/easy-kit v0.0.7
-	github.com/JrMarcco/kuryr-api v0.0.12
+	github.com/JrMarcco/kuryr-api v0.0.14
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/golang-jwt/jwt/v5 v5.2.3
 	github.com/patrickmn/go-cache v2.1.0+incompatible

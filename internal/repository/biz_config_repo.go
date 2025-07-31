@@ -119,7 +119,7 @@ func (r *DefaultBizConfigRepo) GetById(ctx context.Context, id uint64) (domain.B
 func (r *DefaultBizConfigRepo) toEntity(bizConfig domain.BizConfig) dao.BizConfig {
 	entity := dao.BizConfig{
 		Id:        bizConfig.Id,
-		OwnerType: bizConfig.OwnerType.String(),
+		OwnerType: string(bizConfig.OwnerType),
 		RateLimit: bizConfig.RateLimit,
 	}
 

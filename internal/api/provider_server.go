@@ -8,6 +8,8 @@ import (
 	commonv1 "github.com/JrMarcco/kuryr-api/api/common/v1"
 	providerv1 "github.com/JrMarcco/kuryr-api/api/provider/v1"
 	"github.com/JrMarcco/kuryr/internal/domain"
+	pkggorm "github.com/JrMarcco/kuryr/internal/pkg/gorm"
+	"github.com/JrMarcco/kuryr/internal/search"
 	"github.com/JrMarcco/kuryr/internal/service/provider"
 )
 
@@ -81,9 +83,9 @@ func (s *ProviderServer) pbToDomain(pb *providerv1.Provider) (domain.Provider, e
 		AppId:            pb.AppId,
 		ApiKey:           pb.ApiKey,
 		ApiSecret:        pb.ApiSecret,
-		Weight:           int(pb.Weight),
-		QpsLimit:         int(pb.QpsLimit),
-		DailyLimit:       int(pb.DailyLimit),
+		Weight:           pb.Weight,
+		QpsLimit:         pb.QpsLimit,
+		DailyLimit:       pb.DailyLimit,
 		AuditCallbackUrl: pb.AuditCallbackUrl,
 		ActiveStatus:     domain.ActiveStatus(pb.ActiveStatus),
 	}
@@ -99,16 +101,45 @@ func (s *ProviderServer) pbToDomain(pb *providerv1.Provider) (domain.Provider, e
 	return p, nil
 }
 
-func (s *ProviderServer) List(ctx context.Context, _ *providerv1.ListRequest) (*providerv1.ListResponse, error) {
-	ps, err := s.svc.ListAll(ctx)
-	if err != nil {
-		return &providerv1.ListResponse{}, fmt.Errorf("[kuryr] failed to list providers: %w", err)
+func (s *ProviderServer) Search(ctx context.Context, request *providerv1.SearchRequest) (*providerv1.SearchResponse, error) {
+	if request == nil {
+		return &providerv1.SearchResponse{}, fmt.Errorf("[kuryr] invalid request, provider is nil")
 	}
 
-	pbs := slice.Map(ps, func(_ int, p domain.Provider) *providerv1.Provider {
+	if request.Offset < 0 {
+		request.Offset = 0
+	}
+
+	if request.Limit <= 0 {
+		request.Limit = 10
+	}
+	if request.Limit > 100 {
+		request.Limit = 100
+	}
+
+	res, err := s.svc.Search(ctx, search.ProviderCriteria{
+		ProviderName: request.ProviderName,
+		Channel:      int32(request.Channel),
+	}, &pkggorm.PaginationParam{
+		Offset: int(request.Offset),
+		Limit:  int(request.Limit),
+	})
+	if err != nil {
+		return &providerv1.SearchResponse{}, fmt.Errorf("[kuryr] failed to list providers: %w", err)
+	}
+
+	if res.Total == 0 {
+		return &providerv1.SearchResponse{
+			Total:     0,
+			Providers: []*providerv1.Provider{},
+		}, nil
+	}
+
+	pbs := slice.Map(res.Records, func(_ int, p domain.Provider) *providerv1.Provider {
 		return s.domainToPb(p)
 	})
-	return &providerv1.ListResponse{
+	return &providerv1.SearchResponse{
+		Total:     res.Total,
 		Providers: pbs,
 	}, nil
 }
@@ -137,11 +168,11 @@ func (s *ProviderServer) domainToPb(p domain.Provider) *providerv1.Provider {
 		AppId:            p.AppId,
 		ApiKey:           p.ApiKey,
 		ApiSecret:        p.ApiSecret,
-		Weight:           int32(p.Weight),
-		QpsLimit:         int32(p.QpsLimit),
-		DailyLimit:       int32(p.DailyLimit),
+		Weight:           p.Weight,
+		QpsLimit:         p.QpsLimit,
+		DailyLimit:       p.DailyLimit,
 		AuditCallbackUrl: p.AuditCallbackUrl,
-		ActiveStatus:     p.ActiveStatus.String(),
+		ActiveStatus:     string(p.ActiveStatus),
 	}
 
 	switch p.Channel {
@@ -149,6 +180,7 @@ func (s *ProviderServer) domainToPb(p domain.Provider) *providerv1.Provider {
 		pb.Channel = commonv1.Channel_SMS
 	case domain.ChannelEmail:
 		pb.Channel = commonv1.Channel_EMAIL
+	default:
 	}
 	return pb
 }

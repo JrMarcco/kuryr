@@ -16,7 +16,7 @@ type BizConfig struct {
 	ChannelConfig  xsql.JsonColumn[domain.ChannelConfig]  `gorm:"column:channel_config;type:JSON"`
 	QuotaConfig    xsql.JsonColumn[domain.QuotaConfig]    `gorm:"column:quota_config;type:JSON"`
 	CallbackConfig xsql.JsonColumn[domain.CallbackConfig] `gorm:"column:callback_config;type:JSON"`
-	RateLimit      int                                    `gorm:"column:rate_limit"`
+	RateLimit      int32                                  `gorm:"column:rate_limit"`
 	CreatedAt      int64                                  `gorm:"column:created_at"`
 	UpdatedAt      int64                                  `gorm:"column:updated_at"`
 }

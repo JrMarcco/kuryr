@@ -13,10 +13,6 @@ const (
 	SendStatusCancel  SendStatus = "cancel"
 )
 
-func (s SendStatus) String() string {
-	return string(s)
-}
-
 type Template struct {
 	Id      uint64            `json:"id"`
 	Version uint64            `json:"version"`
