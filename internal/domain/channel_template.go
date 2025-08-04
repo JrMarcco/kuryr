@@ -6,7 +6,7 @@ import (
 	"github.com/JrMarcco/kuryr/internal/errs"
 )
 
-type NotificationType uint8
+type NotificationType int32
 
 const (
 	NotificationTypeVerifyCode = 0
@@ -38,9 +38,9 @@ type ChannelTemplate struct {
 	TplName string `json:"tpl_name"` // 模板名
 	TplDesc string `json:"tpl_desc"` // 模板描述
 
-	Channel             Channel          `json:"channel"`               // 渠道类型
-	NotificationType    NotificationType `json:"notification_type"`     // 通知类型
-	ActivatedTplVersion uint64           `json:"activated_tpl_version"` // 激活版本 id
+	Channel          Channel          `json:"channel"`           // 渠道类型
+	NotificationType NotificationType `json:"notification_type"` // 通知类型
+	ActivatedVersion uint64           `json:"activated_version"` // 激活版本 id
 
 	CreatedAt int64 `json:"created_at"`
 	UpdatedAt int64 `json:"updated_at"`

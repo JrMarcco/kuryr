@@ -25,6 +25,12 @@ var RepoFxOpt = fx.Options(
 			InitProviderDao,
 			fx.As(new(dao.ProviderDao)),
 		),
+
+		// channel template dao
+		fx.Annotate(
+			dao.NewDefaultChannelTplDao,
+			fx.As(new(dao.ChannelTplDao)),
+		),
 	),
 
 	// cache
@@ -57,6 +63,12 @@ var RepoFxOpt = fx.Options(
 		fx.Annotate(
 			repository.NewDefaultProviderRepo,
 			fx.As(new(repository.ProviderRepo)),
+		),
+
+		// channel template repo
+		fx.Annotate(
+			repository.NewDefaultChannelTplRepo,
+			fx.As(new(repository.ChannelTplRepo)),
 		),
 	),
 )

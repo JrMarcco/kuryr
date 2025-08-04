@@ -1,5 +1,11 @@
 package dao
 
+import (
+	"context"
+
+	"gorm.io/gorm"
+)
+
 // ChannelTemplate 渠道模板信息表
 type ChannelTemplate struct {
 	Id        uint64 `gorm:"column:id"`
@@ -9,9 +15,9 @@ type ChannelTemplate struct {
 	TplName string `gorm:"column:tpl_name"`
 	TplDesc string `gorm:"column:tpl_desc"`
 
-	Channel             string `gorm:"column:channel"`
-	NotificationType    string `gorm:"column:notification_type"`
-	ActivatedTplVersion uint64 `gorm:"column:activated_tpl_version"`
+	Channel          int32  `gorm:"column:channel"`
+	NotificationType int32  `gorm:"column:notification_type"`
+	ActivatedVersion uint64 `gorm:"column:activated_version"`
 
 	CreatedAt int64 `gorm:"column:created_at"`
 	UpdatedAt int64 `gorm:"column:updated_at"`
@@ -54,7 +60,7 @@ type ChannelTemplateProvider struct {
 
 	ProviderId      uint64 `gorm:"column:provider_id"`
 	ProviderName    string `gorm:"column:provider_name"`
-	ProviderChannel string `gorm:"column:provider_channel"`
+	ProviderChannel int32  `gorm:"column:provider_channel"`
 	ProviderTplId   string `gorm:"column:provider_tpl_id"`
 
 	AuditRequestId  string `gorm:"column:audit_request_id"`
@@ -71,8 +77,51 @@ func (ChannelTemplateProvider) TableName() string {
 }
 
 type ChannelTplDao interface {
+	FindById(ctx context.Context, id uint64) (ChannelTemplate, error)
+	FindVersionsByIds(ctx context.Context, ids []uint64) ([]ChannelTemplateVersion, error)
+	FindProviderByVersionIds(ctx context.Context, versionIds []uint64) ([]ChannelTemplateProvider, error)
 }
 
 var _ ChannelTplDao = (*DefaultChannelTplDao)(nil)
 
-type DefaultChannelTplDao struct{}
+type DefaultChannelTplDao struct {
+	db *gorm.DB
+}
+
+func (d *DefaultChannelTplDao) FindById(ctx context.Context, id uint64) (ChannelTemplate, error) {
+	var tpl ChannelTemplate
+	err := d.db.WithContext(ctx).Model(&ChannelTemplate{}).
+		Where("id = ?", id).
+		First(&tpl).Error
+	return tpl, err
+}
+
+func (d *DefaultChannelTplDao) FindVersionsByIds(ctx context.Context, ids []uint64) ([]ChannelTemplateVersion, error) {
+	if len(ids) == 0 {
+		return []ChannelTemplateVersion{}, nil
+	}
+
+	var versions []ChannelTemplateVersion
+	err := d.db.WithContext(ctx).Model(&ChannelTemplateVersion{}).
+		Where("tpl_id in (?)", ids).
+		Find(&versions).Error
+	return versions, err
+}
+
+func (d *DefaultChannelTplDao) FindProviderByVersionIds(ctx context.Context, versionIds []uint64) ([]ChannelTemplateProvider, error) {
+	if len(versionIds) == 0 {
+		return []ChannelTemplateProvider{}, nil
+	}
+
+	var providers []ChannelTemplateProvider
+	err := d.db.WithContext(ctx).Model(&ChannelTemplateProvider{}).
+		Where("tpl_version_id in (?)", versionIds).
+		Find(&providers).Error
+	return providers, err
+}
+
+func NewDefaultChannelTplDao(db *gorm.DB) *DefaultChannelTplDao {
+	return &DefaultChannelTplDao{
+		db: db,
+	}
+}
