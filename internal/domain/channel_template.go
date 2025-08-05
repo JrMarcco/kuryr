@@ -9,24 +9,16 @@ import (
 type NotificationType int32
 
 const (
-	NotificationTypeVerifyCode = 0
+	NotificationTypeVerifyCode = 1
+	NotificationTypeNotice     = 2
 )
 
 func (n NotificationType) IsValid() bool {
 	switch n {
-	case NotificationTypeVerifyCode:
+	case NotificationTypeVerifyCode, NotificationTypeNotice:
 		return true
 	}
 	return false
-}
-
-func (n NotificationType) String() string {
-	switch n {
-	case NotificationTypeVerifyCode:
-		return "验证码"
-	default:
-		return "未知类型"
-	}
 }
 
 // ChannelTemplate 渠道模板领域对象
@@ -38,9 +30,9 @@ type ChannelTemplate struct {
 	TplName string `json:"tpl_name"` // 模板名
 	TplDesc string `json:"tpl_desc"` // 模板描述
 
-	Channel          Channel          `json:"channel"`           // 渠道类型
-	NotificationType NotificationType `json:"notification_type"` // 通知类型
-	ActivatedVersion uint64           `json:"activated_version"` // 激活版本 id
+	Channel            Channel          `json:"channel"`              // 渠道类型
+	NotificationType   NotificationType `json:"notification_type"`    // 通知类型
+	ActivatedVersionId uint64           `json:"activated_version_id"` // 激活版本 id
 
 	CreatedAt int64 `json:"created_at"`
 	UpdatedAt int64 `json:"updated_at"`
@@ -64,30 +56,30 @@ func (t ChannelTemplate) Validate() error {
 	}
 
 	if !t.Channel.IsValid() {
-		return fmt.Errorf("%w: invalid channel: %s", errs.ErrInvalidParam, t.Channel)
+		return fmt.Errorf("%w: invalid channel: %d", errs.ErrInvalidParam, t.Channel)
 	}
 	if !t.NotificationType.IsValid() {
-		return fmt.Errorf("%w: invalid msg type: %s", errs.ErrInvalidParam, t.NotificationType)
+		return fmt.Errorf("%w: invalid msg type: %d", errs.ErrInvalidParam, t.NotificationType)
 	}
 	return nil
 }
 
-func (t ChannelTemplate) Published() bool {
-	return t.ActivatedTplVersion > 0
-}
-
-// ActivatedVersion 当前启用版本
-func (t ChannelTemplate) ActivatedVersion() *ChannelTemplateVersion {
-	if t.ActivatedTplVersion == 0 {
-		return nil
+// GetActivatedVersion 当前启用版本
+func (t ChannelTemplate) GetActivatedVersion() (ChannelTemplateVersion, error) {
+	if t.ActivatedVersionId == 0 {
+		return ChannelTemplateVersion{}, fmt.Errorf("%w: channel template id = %d", errs.ErrNoActivatedTplVersion, t.Id)
 	}
 
 	for i := range t.Versions {
-		if t.Versions[i].Id == t.ActivatedTplVersion {
-			return &t.Versions[i]
+		if t.Versions[i].Id == t.ActivatedVersionId {
+			if t.Versions[i].AuditStatus != AuditStatusApproved {
+				return ChannelTemplateVersion{}, fmt.Errorf("%w: channel template id = %d, version id = %d", errs.ErrNotApprovedTplVersion, t.Id, t.ActivatedVersionId)
+			}
+
+			return t.Versions[i], nil
 		}
 	}
-	return nil
+	return ChannelTemplateVersion{}, fmt.Errorf("%w: channel template id = %d", errs.ErrNoActivatedTplVersion, t.Id)
 }
 
 // GetVersion 根据 id 获取版本信息
@@ -134,7 +126,8 @@ type ChannelTemplateVersion struct {
 	Signature   string `json:"signature"`    // 签名
 	Content     string `json:"content"`      // 模板内容
 
-	ApplyRemark     string      `json:"apply_remark"`     // 申请说明
+	ApplyRemark string `json:"apply_remark"` // 申请说明
+
 	AuditId         uint64      `json:"audit_id"`         // 审批记录 id
 	AuditorId       uint64      `json:"auditor_id"`       // 审批人 id
 	AuditTime       int64       `json:"audit_time"`       // 审批时间
@@ -155,9 +148,9 @@ type ChannelTemplateProvider struct {
 	TplVersionId uint64 `json:"tpl_version_id"` // 模板版本 id
 
 	ProviderId      uint64  `json:"provider_id"`      // 供应商 id
-	ProviderName    string  `json:"provider_name"`    //
-	ProviderChannel Channel `json:"provider_channel"` // 供应商渠道类型
+	ProviderName    string  `json:"provider_name"`    // 供应商名称
 	ProviderTplId   string  `json:"provider_tpl_id"`  // 供应商侧模板 id
+	ProviderChannel Channel `json:"provider_channel"` // 供应商渠道类型
 
 	AuditRequestId  string      `json:"audit_request_id"` // 审批请求 id
 	AuditStatus     AuditStatus `json:"audit_status"`     // 审批状态

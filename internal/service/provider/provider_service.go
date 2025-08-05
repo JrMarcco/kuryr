@@ -43,7 +43,7 @@ func (s *DefaultService) Delete(ctx context.Context, id uint64) error {
 
 	provider, err := s.FindById(ctx, id)
 	if err != nil {
-		return fmt.Errorf("%w: can not find provider", errs.ErrRecordNotFound)
+		return fmt.Errorf("%w: cannot find provider", errs.ErrRecordNotFound)
 	}
 
 	if err := s.canDelete(provider); err != nil {

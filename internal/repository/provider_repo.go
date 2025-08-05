@@ -65,7 +65,7 @@ func (r *DefaultProviderRepo) FindById(ctx context.Context, id uint64) (domain.P
 	entity, err := r.dao.FindById(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.Provider{}, fmt.Errorf("%w: can not find provider", errs.ErrRecordNotFound)
+			return domain.Provider{}, fmt.Errorf("%w: cannot find provider", errs.ErrRecordNotFound)
 		}
 		return domain.Provider{}, err
 	}
@@ -76,7 +76,7 @@ func (r *DefaultProviderRepo) FindByChannel(ctx context.Context, channel string)
 	entities, err := r.dao.FindByChannel(ctx, channel)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("%w: can not find provider", errs.ErrRecordNotFound)
+			return nil, fmt.Errorf("%w: cannot find provider", errs.ErrRecordNotFound)
 		}
 		return nil, err
 	}

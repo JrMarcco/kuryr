@@ -97,7 +97,7 @@ func (r *DefaultBizConfigRepo) GetById(ctx context.Context, id uint64) (domain.B
 	entity, err := r.dao.FindById(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.BizConfig{}, fmt.Errorf("%w: can not find biz config", errs.ErrRecordNotFound)
+			return domain.BizConfig{}, fmt.Errorf("%w: cannot find biz config, id = %d", errs.ErrRecordNotFound, id)
 		}
 		return domain.BizConfig{}, err
 	}

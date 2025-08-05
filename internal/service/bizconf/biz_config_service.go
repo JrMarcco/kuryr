@@ -9,7 +9,7 @@ import (
 	"github.com/JrMarcco/kuryr/internal/repository"
 )
 
-//go:generate mockgen -source=./biz_config_service.go -destination=./mock/biz_config_service.mock.go -package=bizconfmock -typed BizConfigService
+//go:generate mockgen -source=./biz_config_service.go -destination=./mock/biz_config_service.mock.go -package=bizconfmock -typed Service
 
 type Service interface {
 	Save(ctx context.Context, bizConfig domain.BizConfig) error
