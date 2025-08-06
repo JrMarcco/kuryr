@@ -30,7 +30,7 @@ type Provider struct {
 
 func (p *Provider) Validate() error {
 	if p.ProviderName == "" {
-		return fmt.Errorf("%w: provider name can not be empty", errs.ErrInvalidParam)
+		return fmt.Errorf("%w: provider name cannot be empty", errs.ErrInvalidParam)
 	}
 
 	if !p.Channel.IsValid() {
@@ -38,27 +38,27 @@ func (p *Provider) Validate() error {
 	}
 
 	if p.Endpoint == "" {
-		return fmt.Errorf("%w: provider endpoint can not be empty", errs.ErrInvalidParam)
+		return fmt.Errorf("%w: provider endpoint cannot be empty", errs.ErrInvalidParam)
 	}
 
 	if p.AppId == "" {
-		return fmt.Errorf("%w: provider app id can not be empty", errs.ErrInvalidParam)
+		return fmt.Errorf("%w: provider app id cannot be empty", errs.ErrInvalidParam)
 	}
 	if p.ApiKey == "" {
-		return fmt.Errorf("%w: provider api key can not be empty", errs.ErrInvalidParam)
+		return fmt.Errorf("%w: provider api key cannot be empty", errs.ErrInvalidParam)
 	}
 	if p.ApiSecret == "" {
-		return fmt.Errorf("%w: provider api secret can not be empty", errs.ErrInvalidParam)
+		return fmt.Errorf("%w: provider api secret cannot be empty", errs.ErrInvalidParam)
 	}
 
 	if p.Weight < 0 {
-		return fmt.Errorf("%w: provider weight can not be negative", errs.ErrInvalidParam)
+		return fmt.Errorf("%w: provider weight cannot be negative", errs.ErrInvalidParam)
 	}
 	if p.QpsLimit <= 0 {
-		return fmt.Errorf("%w: provider qps limit can not be negative or zero", errs.ErrInvalidParam)
+		return fmt.Errorf("%w: provider qps limit cannot be negative or zero", errs.ErrInvalidParam)
 	}
 	if p.DailyLimit <= 0 {
-		return fmt.Errorf("%w: provider daily limit can not be negative or zero", errs.ErrInvalidParam)
+		return fmt.Errorf("%w: provider daily limit cannot be negative or zero", errs.ErrInvalidParam)
 	}
 
 	return nil

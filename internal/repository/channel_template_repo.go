@@ -13,10 +13,17 @@ import (
 )
 
 type ChannelTplRepo interface {
-	SaveTemplate(ctx context.Context, domain domain.ChannelTemplate) error
+	SaveTemplate(ctx context.Context, template domain.ChannelTemplate) error
+	SaveVersion(ctx context.Context, version domain.ChannelTemplateVersion) error
+	SaveProviders(ctx context.Context, providers []domain.ChannelTemplateProvider) error
+
+	ActivateVersion(ctx context.Context, templateId uint64, versionId uint64) error
 
 	// FindDetailById 查询详情，包含版本、供应商信息。
+	FindById(ctx context.Context, id uint64) (domain.ChannelTemplate, error)
 	FindDetailById(ctx context.Context, id uint64) (domain.ChannelTemplate, error)
+
+	FindVersionById(ctx context.Context, id uint64) (domain.ChannelTemplateVersion, error)
 
 	ListByOwner(ctx context.Context, ownerId uint64) ([]domain.ChannelTemplate, error)
 }
@@ -27,8 +34,34 @@ type DefaultChannelTplRepo struct {
 	dao dao.ChannelTplDao
 }
 
-func (r *DefaultChannelTplRepo) SaveTemplate(ctx context.Context, domain domain.ChannelTemplate) error {
-	return r.dao.SaveTemplate(ctx, r.toTemplateEntity(domain))
+func (r *DefaultChannelTplRepo) SaveTemplate(ctx context.Context, template domain.ChannelTemplate) error {
+	return r.dao.SaveTemplate(ctx, r.toTemplateEntity(template))
+}
+
+func (r *DefaultChannelTplRepo) SaveVersion(ctx context.Context, version domain.ChannelTemplateVersion) error {
+	return r.dao.SaveVersion(ctx, r.toVersionEntity(version))
+}
+
+func (r *DefaultChannelTplRepo) SaveProviders(ctx context.Context, providers []domain.ChannelTemplateProvider) error {
+	entities := slice.Map(providers, func(_ int, provider domain.ChannelTemplateProvider) dao.ChannelTemplateProvider {
+		return r.toProviderEntity(provider)
+	})
+	return r.dao.SaveProviders(ctx, entities)
+}
+
+func (r *DefaultChannelTplRepo) ActivateVersion(ctx context.Context, templateId uint64, versionId uint64) error {
+	return r.dao.ActivateVersion(ctx, templateId, versionId)
+}
+
+func (r *DefaultChannelTplRepo) FindById(ctx context.Context, id uint64) (domain.ChannelTemplate, error) {
+	entity, err := r.dao.FindById(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.ChannelTemplate{}, fmt.Errorf("%w: cannot find channel template, id = %d", errs.ErrRecordNotFound, id)
+		}
+		return domain.ChannelTemplate{}, err
+	}
+	return r.toTemplateDomain(entity), nil
 }
 
 func (r *DefaultChannelTplRepo) FindDetailById(ctx context.Context, id uint64) (domain.ChannelTemplate, error) {
@@ -41,6 +74,12 @@ func (r *DefaultChannelTplRepo) FindDetailById(ctx context.Context, id uint64) (
 	}
 
 	templates, err := r.getTemplates(ctx, []dao.ChannelTemplate{entity})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.ChannelTemplate{}, fmt.Errorf("%w: cannot find template version or privider, template id = %d", errs.ErrRecordNotFound, id)
+		}
+		return domain.ChannelTemplate{}, err
+	}
 
 	const first = 0
 	return templates[first], nil
@@ -92,6 +131,18 @@ func (r *DefaultChannelTplRepo) getTemplates(ctx context.Context, entities []dao
 	}
 
 	return res, nil
+}
+
+// FindVersionById implements ChannelTplRepo.
+func (r *DefaultChannelTplRepo) FindVersionById(ctx context.Context, id uint64) (domain.ChannelTemplateVersion, error) {
+	entity, err := r.dao.FindVersionById(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.ChannelTemplateVersion{}, fmt.Errorf("%w: cannot find channel template version, id = %d", errs.ErrRecordNotFound, id)
+		}
+		return domain.ChannelTemplateVersion{}, err
+	}
+	return r.toVersionDomain(entity), nil
 }
 
 func (r *DefaultChannelTplRepo) ListByOwner(ctx context.Context, ownerId uint64) ([]domain.ChannelTemplate, error) {

@@ -42,17 +42,17 @@ type ChannelTemplate struct {
 
 func (t ChannelTemplate) Validate() error {
 	if t.OwnerId == 0 {
-		return fmt.Errorf("%w: owner id can not be zero", errs.ErrInvalidParam)
+		return fmt.Errorf("%w: owner id cannot be zero", errs.ErrInvalidParam)
 	}
 	if !t.OwnerType.IsValid() {
 		return fmt.Errorf("%w: invalid owner type: %s", errs.ErrInvalidParam, t.OwnerType)
 	}
 
 	if t.TplName == "" {
-		return fmt.Errorf("%w: template name can not be empty", errs.ErrInvalidParam)
+		return fmt.Errorf("%w: template name cannot be empty", errs.ErrInvalidParam)
 	}
 	if t.TplDesc == "" {
-		return fmt.Errorf("%w: template desc can not be empty", errs.ErrInvalidParam)
+		return fmt.Errorf("%w: template desc cannot be empty", errs.ErrInvalidParam)
 	}
 
 	if !t.Channel.IsValid() {
@@ -141,6 +141,25 @@ type ChannelTemplateVersion struct {
 	Providers []ChannelTemplateProvider `json:"providers"` // 关联供应商
 }
 
+func (tv ChannelTemplateVersion) Validate() error {
+	if tv.TplId == 0 {
+		return fmt.Errorf("%w: template id cannot be zero", errs.ErrInvalidParam)
+	}
+	if tv.VersionName == "" {
+		return fmt.Errorf("%w: version name cannot be empty", errs.ErrInvalidParam)
+	}
+	if tv.Signature == "" {
+		return fmt.Errorf("%w: signature cannot be empty", errs.ErrInvalidParam)
+	}
+	if tv.Content == "" {
+		return fmt.Errorf("%w: content cannot be empty", errs.ErrInvalidParam)
+	}
+	if tv.ApplyRemark == "" {
+		return fmt.Errorf("%w: apply remark cannot be empty", errs.ErrInvalidParam)
+	}
+	return nil
+}
+
 // ChannelTemplateProvider 渠道模板供应商领域对象
 type ChannelTemplateProvider struct {
 	Id           uint64 `json:"id"`
@@ -159,4 +178,23 @@ type ChannelTemplateProvider struct {
 
 	CreatedAt int64 `json:"created_at"`
 	UpdatedAt int64 `json:"updated_at"`
+}
+
+func (tp ChannelTemplateProvider) Validate() error {
+	if tp.TplId == 0 {
+		return fmt.Errorf("%w: template id cannot be zero", errs.ErrInvalidParam)
+	}
+	if tp.TplVersionId == 0 {
+		return fmt.Errorf("%w: template version id cannot be zero", errs.ErrInvalidParam)
+	}
+	if tp.ProviderId == 0 {
+		return fmt.Errorf("%w: provider id cannot be zero", errs.ErrInvalidParam)
+	}
+	if tp.ProviderName == "" {
+		return fmt.Errorf("%w: provider name cannot be empty", errs.ErrInvalidParam)
+	}
+	if !tp.ProviderChannel.IsValid() {
+		return fmt.Errorf("%w: invalid provider channel: %d", errs.ErrInvalidParam, tp.ProviderChannel)
+	}
+	return nil
 }

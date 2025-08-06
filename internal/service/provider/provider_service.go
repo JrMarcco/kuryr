@@ -56,7 +56,7 @@ func (s *DefaultService) Delete(ctx context.Context, id uint64) error {
 // canDelete 判断 provider 是否允许删除
 func (s *DefaultService) canDelete(provider domain.Provider) error {
 	if provider.ActiveStatus == domain.ActiveStatusActive {
-		return fmt.Errorf("%w: provider is active, can not delete", errs.ErrInvalidStatus)
+		return fmt.Errorf("%w: provider is active, cannot delete", errs.ErrInvalidStatus)
 	}
 	return nil
 }

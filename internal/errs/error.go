@@ -5,6 +5,7 @@ import "errors"
 var (
 	ErrInvalidParam   = errors.New("[kuryr] invalid param")
 	ErrInvalidStatus  = errors.New("[kuryr] invalid status")
+	ErrInvalidChannel = errors.New("[kuryr] invalid channel")
 	ErrRecordNotFound = errors.New("[kuryr] record not found")
 
 	ErrNoActivatedTplVersion = errors.New("[kuryr] no activated channel template version")

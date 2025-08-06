@@ -83,9 +83,11 @@ type ChannelTplDao interface {
 	SaveVersion(ctx context.Context, version ChannelTemplateVersion) error
 	SaveProviders(ctx context.Context, providers []ChannelTemplateProvider) error
 
+	// ActivateVersion 激活版本
 	ActivateVersion(ctx context.Context, templateId uint64, versionId uint64) error
 
 	FindById(ctx context.Context, id uint64) (ChannelTemplate, error)
+	FindVersionById(ctx context.Context, id uint64) (ChannelTemplateVersion, error)
 	FindVersionsByIds(ctx context.Context, ids []uint64) ([]ChannelTemplateVersion, error)
 	FindProviderByTplId(ctx context.Context, tplId uint64) ([]ChannelTemplateProvider, error)
 	FindProviderByVersionIds(ctx context.Context, versionIds []uint64) ([]ChannelTemplateProvider, error)
@@ -126,22 +128,6 @@ func (d *DefaultChannelTplDao) SaveProviders(ctx context.Context, providers []Ch
 }
 
 func (d *DefaultChannelTplDao) ActivateVersion(ctx context.Context, templateId uint64, versionId uint64) error {
-	var template ChannelTemplate
-	err := d.db.WithContext(ctx).Model(&ChannelTemplate{}).
-		Where("id = ?", templateId).
-		First(&template).Error
-	if err != nil {
-		return err
-	}
-
-	var version ChannelTemplateVersion
-	err = d.db.WithContext(ctx).Model(&ChannelTemplateVersion{}).
-		Where("id = ?", versionId).
-		First(&version).Error
-	if err != nil {
-		return err
-	}
-
 	return d.db.WithContext(ctx).Model(&ChannelTemplate{}).
 		Where("id = ?", templateId).
 		Updates(map[string]any{
@@ -156,6 +142,14 @@ func (d *DefaultChannelTplDao) FindById(ctx context.Context, id uint64) (Channel
 		Where("id = ?", id).
 		First(&tpl).Error
 	return tpl, err
+}
+
+func (d *DefaultChannelTplDao) FindVersionById(ctx context.Context, id uint64) (ChannelTemplateVersion, error) {
+	var version ChannelTemplateVersion
+	err := d.db.WithContext(ctx).Model(&ChannelTemplateVersion{}).
+		Where("id = ?", id).
+		First(&version).Error
+	return version, err
 }
 
 func (d *DefaultChannelTplDao) FindVersionsByIds(ctx context.Context, ids []uint64) ([]ChannelTemplateVersion, error) {
