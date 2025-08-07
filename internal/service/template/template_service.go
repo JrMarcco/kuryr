@@ -32,7 +32,7 @@ func (s *DefaultService) SaveTemplate(ctx context.Context, template domain.Chann
 	if err := template.Validate(); err != nil {
 		return err
 	}
-	// 新模板的激活版本 ID 应该为 0，表示暂无可用版本
+	// 新模板的激活版本 id 应该为 0，表示暂无可用版本
 	template.ActivatedVersionId = 0
 	return s.repo.SaveTemplate(ctx, template)
 }

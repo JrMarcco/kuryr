@@ -46,19 +46,19 @@ func (r *DefaultProviderRepo) Search(ctx context.Context, criteria search.Provid
 	res, err := r.dao.Search(ctx, criteria, param)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return pkggorm.NewPaginationResult[domain.Provider]([]domain.Provider{}, 0), nil
+			return pkggorm.NewPaginationResult([]domain.Provider{}, 0), nil
 		}
 		return nil, err
 	}
 
 	if res.Total == 0 {
-		return pkggorm.NewPaginationResult[domain.Provider]([]domain.Provider{}, 0), nil
+		return pkggorm.NewPaginationResult([]domain.Provider{}, 0), nil
 	}
 
 	providers := slice.Map(res.Records, func(_ int, src dao.Provider) domain.Provider {
 		return r.toDomain(src)
 	})
-	return pkggorm.NewPaginationResult[domain.Provider](providers, res.Total), nil
+	return pkggorm.NewPaginationResult(providers, res.Total), nil
 }
 
 func (r *DefaultProviderRepo) FindById(ctx context.Context, id uint64) (domain.Provider, error) {
