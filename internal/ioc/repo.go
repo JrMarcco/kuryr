@@ -14,6 +14,12 @@ import (
 var RepoFxOpt = fx.Options(
 	// dao
 	fx.Provide(
+		// biz info dao
+		fx.Annotate(
+			dao.NewDefaultBizInfoDao,
+			fx.As(new(dao.BizInfoDao)),
+		),
+
 		// biz config dao
 		fx.Annotate(
 			dao.NewDefaultBizConfigDao,
@@ -52,6 +58,12 @@ var RepoFxOpt = fx.Options(
 
 	// repo
 	fx.Provide(
+		// biz info repo
+		fx.Annotate(
+			repository.NewDefaultBizInfoRepo,
+			fx.As(new(repository.BizInfoRepo)),
+		),
+
 		// biz config repo
 		fx.Annotate(
 			repository.NewDefaultBizConfigRepo,

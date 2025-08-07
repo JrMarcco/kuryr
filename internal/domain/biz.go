@@ -2,6 +2,45 @@ package domain
 
 import "github.com/JrMarcco/kuryr/internal/pkg/retry"
 
+// BizType 业务类型。
+type BizType string
+
+const (
+	BizTypeIndividual   BizType = "individual"
+	BizTypeOrganization BizType = "organization"
+)
+
+func (bt BizType) IsValid() bool {
+	switch bt {
+	case BizTypeIndividual, BizTypeOrganization:
+		return true
+	default:
+		return false
+	}
+}
+
+func (bt BizType) IsIndividual() bool {
+	return bt == BizTypeIndividual
+}
+
+func (bt BizType) IsOrganization() bool {
+	return bt == BizTypeOrganization
+}
+
+// BizInfo 业务信息领域对象。
+type BizInfo struct {
+	Id           uint64  `json:"id"`
+	BizType      BizType `json:"biz_type"`
+	BizKey       string  `json:"biz_key"`
+	BizSecret    string  `json:"biz_secret"`
+	BizName      string  `json:"biz_name"`
+	Contact      string  `json:"contact"`
+	ContactEmail string  `json:"contact_email"`
+	CreatorId    uint64  `json:"creator_id"`
+	CreatedAt    int64   `json:"created_at"`
+	UpdatedAt    int64   `json:"updated_at"`
+}
+
 // OwnerType 拥有者类型
 type OwnerType string
 
@@ -18,7 +57,7 @@ func (s OwnerType) IsValid() bool {
 	return false
 }
 
-// BizConfig 业务方配置领域对象
+// BizConfig 业务方配置领域对象。
 type BizConfig struct {
 	Id             uint64          `json:"id"`
 	OwnerType      OwnerType       `json:"owner_type"`

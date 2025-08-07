@@ -29,6 +29,7 @@ type BizConfigDao interface {
 	SaveOrUpdate(ctx context.Context, bizConfig BizConfig) (BizConfig, error)
 
 	Delete(ctx context.Context, id uint64) error
+	DeleteInTx(ctx context.Context, tx *gorm.DB, id uint64) error
 
 	FindById(ctx context.Context, id uint64) (BizConfig, error)
 }
@@ -62,13 +63,15 @@ func (d *DefaultBizConfigDao) SaveOrUpdate(ctx context.Context, bizConfig BizCon
 }
 
 func (d *DefaultBizConfigDao) Delete(ctx context.Context, id uint64) error {
-	res := d.db.WithContext(ctx).Model(&BizConfig{}).
+	return d.db.WithContext(ctx).Model(&BizConfig{}).
 		Where("id = ?", id).
-		Delete(&BizConfig{})
-	if res.Error != nil {
-		return res.Error
-	}
-	return nil
+		Delete(&BizConfig{}).Error
+}
+
+func (d *DefaultBizConfigDao) DeleteInTx(ctx context.Context, tx *gorm.DB, id uint64) error {
+	return tx.WithContext(ctx).Model(&BizConfig{}).
+		Where("id = ?", id).
+		Delete(&BizConfig{}).Error
 }
 
 func (d *DefaultBizConfigDao) FindById(ctx context.Context, id uint64) (BizConfig, error) {

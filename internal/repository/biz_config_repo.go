@@ -16,7 +16,9 @@ import (
 
 type BizConfigRepo interface {
 	Save(ctx context.Context, bizConfig domain.BizConfig) error
+
 	Delete(ctx context.Context, id uint64) error
+	DeleteInTx(ctx context.Context, tx *gorm.DB, id uint64) error
 	GetById(ctx context.Context, id uint64) (domain.BizConfig, error)
 }
 
@@ -53,24 +55,33 @@ func (r *DefaultBizConfigRepo) Save(ctx context.Context, bizConfig domain.BizCon
 }
 
 func (r *DefaultBizConfigRepo) Delete(ctx context.Context, id uint64) error {
-	// 删数据库
-	err := r.dao.Delete(ctx, id)
-	if err != nil {
+	if err := r.dao.Delete(ctx, id); err != nil {
 		return err
 	}
 
-	// 删 redis 缓存
-	err = r.redisCache.Del(ctx, id)
-	if err != nil {
-		r.logger.Error("[biz config] failed to del biz config from redis cache", zap.Error(err))
+	r.clearCache(ctx, id)
+	return nil
+}
+
+func (r *DefaultBizConfigRepo) DeleteInTx(ctx context.Context, tx *gorm.DB, id uint64) error {
+	// 删数据库
+	if err := r.dao.DeleteInTx(ctx, tx, id); err != nil {
+		return err
 	}
 
+	r.clearCache(ctx, id)
+	return nil
+}
+
+func (r *DefaultBizConfigRepo) clearCache(ctx context.Context, id uint64) {
+	// 删 redis 缓存
+	if err := r.redisCache.Del(ctx, id); err != nil {
+		r.logger.Error("[biz config] failed to del biz config from redis cache", zap.Error(err))
+	}
 	// 删本地缓存
-	err = r.localCache.Del(ctx, id)
-	if err != nil {
+	if err := r.localCache.Del(ctx, id); err != nil {
 		r.logger.Error("[biz config] failed to del biz config from local cache", zap.Error(err))
 	}
-	return nil
 }
 
 func (r *DefaultBizConfigRepo) GetById(ctx context.Context, id uint64) (domain.BizConfig, error) {

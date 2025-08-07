@@ -1,3 +1,6 @@
+DROP TYPE IF EXISTS biz_type_enum;
+CREATE TYPE biz_type_enum AS ENUM ('individual', 'organization');
+
 DROP TYPE IF EXISTS active_status_enum;
 CREATE TYPE active_status_enum AS ENUM ('active', 'inactive');
 
