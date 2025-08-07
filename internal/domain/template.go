@@ -21,7 +21,23 @@ func (n NotificationType) IsValid() bool {
 	return false
 }
 
-// ChannelTemplate 渠道模板领域对象
+// ChannelTemplate 渠道模板领域对象。
+//
+// ChannelTemplate ( 渠道模板 ) / ChannelTemplateVersion ( 模板版本 ) / ChannelTemplateProvider ( 模板供应商 ) 关系：
+//  1. ChannelTemplate <> ChannelTemplateVersion 1:N
+//     注：ChannelTemplateVersion 是实际保存消息模板文本的地方。
+//  2. ChannelTemplateVersion <> ChannelTemplateProvider 1:N
+//
+// 渠道模板的管理逻辑：
+//  1. 用户提交模板信息，此时不包含模板文本内容。
+//     这里可以选择前端提交模板的时候可选是否增加默认版本，如果填写了默认模板则直接新增一个版本。
+//  2. 提交模板版本，此时包含模板文本内容。
+//     如果有对接审批中心，此时应该把版本内容提交审批。
+//     内部的版本审批是可选内容，具体可以按照业务需求设计，这里选择保留审批。
+//  3. 针对审批通过的版本，可以关联供应商。
+//     关联供应商后，需要把模板内容同步到供应商平台进行审批。
+//  4. 激活版本，激活后可以正常使用模板发送消息。
+//     注意只有审批通过的版本允许激活。
 type ChannelTemplate struct {
 	Id        uint64    `json:"id"`
 	OwnerId   uint64    `json:"owner_id"`   // 拥有者 id，即 biz_id
@@ -64,7 +80,7 @@ func (t ChannelTemplate) Validate() error {
 	return nil
 }
 
-// GetActivatedVersion 当前启用版本
+// GetActivatedVersion 当前启用版本。
 func (t ChannelTemplate) GetActivatedVersion() (ChannelTemplateVersion, error) {
 	if t.ActivatedVersionId == 0 {
 		return ChannelTemplateVersion{}, fmt.Errorf("%w: channel template id = %d", errs.ErrNoActivatedTplVersion, t.Id)
@@ -82,7 +98,7 @@ func (t ChannelTemplate) GetActivatedVersion() (ChannelTemplateVersion, error) {
 	return ChannelTemplateVersion{}, fmt.Errorf("%w: channel template id = %d", errs.ErrNoActivatedTplVersion, t.Id)
 }
 
-// GetVersion 根据 id 获取版本信息
+// GetVersion 根据 id 获取版本信息。
 func (t ChannelTemplate) GetVersion(versionId uint64) *ChannelTemplateVersion {
 	for i := range t.Versions {
 		if t.Versions[i].Id == versionId {
@@ -92,7 +108,7 @@ func (t ChannelTemplate) GetVersion(versionId uint64) *ChannelTemplateVersion {
 	return nil
 }
 
-// HasApprovedVersion 检查是否存在已审核通过的版本
+// HasApprovedVersion 检查是否存在已审核通过的版本。
 func (t ChannelTemplate) HasApprovedVersion() bool {
 	for i := range t.Versions {
 		if t.Versions[i].AuditStatus == AuditStatusApproved {
@@ -117,7 +133,7 @@ func (t ChannelTemplate) GetProvider(versionId, providerId uint64) *ChannelTempl
 	return nil
 }
 
-// ChannelTemplateVersion 渠道模板版本信息领域对象
+// ChannelTemplateVersion 渠道模板版本信息领域对象。
 type ChannelTemplateVersion struct {
 	Id    uint64 `json:"id"`
 	TplId uint64 `json:"tpl_id"` // 模板 id
@@ -160,7 +176,7 @@ func (tv ChannelTemplateVersion) Validate() error {
 	return nil
 }
 
-// ChannelTemplateProvider 渠道模板供应商领域对象
+// ChannelTemplateProvider 渠道模板供应商领域对象。
 type ChannelTemplateProvider struct {
 	Id           uint64 `json:"id"`
 	TplId        uint64 `json:"tpl_id"`         // 模板 id

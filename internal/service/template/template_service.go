@@ -32,7 +32,7 @@ func (s *DefaultService) SaveTemplate(ctx context.Context, template domain.Chann
 	if err := template.Validate(); err != nil {
 		return err
 	}
-	// 新模板的激活版本 id 应该为 0，表示暂无可用版本
+	// 新模板的激活版本 id 应该为 0，表示暂无可用版本。
 	template.ActivatedVersionId = 0
 	return s.repo.SaveTemplate(ctx, template)
 }
@@ -50,7 +50,6 @@ func (s *DefaultService) SaveProviders(ctx context.Context, providers []domain.C
 }
 
 func (s *DefaultService) ActivateVersion(ctx context.Context, templateId uint64, versionId uint64) error {
-	// 查询模板
 	template, err := s.repo.FindById(ctx, templateId)
 	if err != nil {
 		return err
@@ -66,6 +65,7 @@ func (s *DefaultService) ActivateVersion(ctx context.Context, templateId uint64,
 		return fmt.Errorf("%w: template id and version id mismatch", errs.ErrInvalidParam)
 	}
 
+	// 只允许激活审批通过的版本。
 	if version.AuditStatus != domain.AuditStatusApproved {
 		return fmt.Errorf("%w: version is not approved", errs.ErrInvalidStatus)
 	}
