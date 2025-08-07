@@ -11,8 +11,6 @@ import (
 	"time"
 
 	"github.com/JrMarcco/kuryr/internal/domain"
-	pkggorm "github.com/JrMarcco/kuryr/internal/pkg/gorm"
-	"github.com/JrMarcco/kuryr/internal/search"
 	"gorm.io/gorm"
 )
 
@@ -50,7 +48,7 @@ type ProviderDao interface {
 	Delete(ctx context.Context, id uint64) error
 	Update(ctx context.Context, provider Provider) error
 
-	Search(ctx context.Context, criteria search.ProviderCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[Provider], error)
+	List(ctx context.Context) ([]Provider, error)
 	FindById(ctx context.Context, id uint64) (Provider, error)
 	FindByChannel(ctx context.Context, channel string) ([]Provider, error)
 }
@@ -135,17 +133,12 @@ func (d *DefaultProviderDao) Update(ctx context.Context, provider Provider) erro
 		Updates(values).Error
 }
 
-func (d *DefaultProviderDao) Search(ctx context.Context, criteria search.ProviderCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[Provider], error) {
-	var records []Provider
-
-	query := d.db.WithContext(ctx).Model(&Provider{})
-	if criteria.ProviderName != "" {
-		query = query.Where("provider_name like ?", pkggorm.BuildLikePattern(criteria.ProviderName))
-	}
-	if criteria.Channel != 0 {
-		query = query.Where("channel = ?", criteria.Channel)
-	}
-	return pkggorm.Pagination(query, param, records)
+func (d *DefaultProviderDao) List(ctx context.Context) ([]Provider, error) {
+	var providers []Provider
+	err := d.db.WithContext(ctx).Model(&Provider{}).
+		Where("active_status = ?", domain.ActiveStatusActive).
+		Find(&providers).Error
+	return providers, err
 }
 
 func (d *DefaultProviderDao) FindById(ctx context.Context, id uint64) (Provider, error) {

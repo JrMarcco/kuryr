@@ -6,9 +6,7 @@ import (
 
 	"github.com/JrMarcco/kuryr/internal/domain"
 	"github.com/JrMarcco/kuryr/internal/errs"
-	pkggorm "github.com/JrMarcco/kuryr/internal/pkg/gorm"
 	"github.com/JrMarcco/kuryr/internal/repository"
-	"github.com/JrMarcco/kuryr/internal/search"
 )
 
 type Service interface {
@@ -16,7 +14,7 @@ type Service interface {
 	Delete(ctx context.Context, id uint64) error
 	Update(ctx context.Context, provider domain.Provider) error
 
-	Search(ctx context.Context, criteria search.ProviderCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.Provider], error)
+	List(ctx context.Context) ([]domain.Provider, error)
 	FindById(ctx context.Context, id uint64) (domain.Provider, error)
 	FindByChannel(ctx context.Context, channel domain.Channel) ([]domain.Provider, error)
 }
@@ -68,8 +66,8 @@ func (s *DefaultService) Update(ctx context.Context, provider domain.Provider) e
 	return s.repo.Update(ctx, provider)
 }
 
-func (s *DefaultService) Search(ctx context.Context, criteria search.ProviderCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.Provider], error) {
-	return s.repo.Search(ctx, criteria, param)
+func (s *DefaultService) List(ctx context.Context) ([]domain.Provider, error) {
+	return s.repo.List(ctx)
 }
 
 func (s *DefaultService) FindById(ctx context.Context, id uint64) (domain.Provider, error) {

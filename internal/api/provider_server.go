@@ -8,8 +8,6 @@ import (
 	commonv1 "github.com/JrMarcco/kuryr-api/api/common/v1"
 	providerv1 "github.com/JrMarcco/kuryr-api/api/provider/v1"
 	"github.com/JrMarcco/kuryr/internal/domain"
-	pkggorm "github.com/JrMarcco/kuryr/internal/pkg/gorm"
-	"github.com/JrMarcco/kuryr/internal/search"
 	"github.com/JrMarcco/kuryr/internal/service/provider"
 )
 
@@ -101,45 +99,20 @@ func (s *ProviderServer) pbToDomain(pb *providerv1.Provider) (domain.Provider, e
 	return p, nil
 }
 
-func (s *ProviderServer) Search(ctx context.Context, request *providerv1.SearchRequest) (*providerv1.SearchResponse, error) {
+func (s *ProviderServer) List(ctx context.Context, request *providerv1.ListRequest) (*providerv1.ListResponse, error) {
 	if request == nil {
-		return &providerv1.SearchResponse{}, fmt.Errorf("[kuryr] invalid request, provider is nil")
+		return &providerv1.ListResponse{}, fmt.Errorf("[kuryr] invalid request, provider is nil")
 	}
 
-	if request.Offset < 0 {
-		request.Offset = 0
-	}
-
-	if request.Limit <= 0 {
-		request.Limit = 10
-	}
-	if request.Limit > 100 {
-		request.Limit = 100
-	}
-
-	res, err := s.svc.Search(ctx, search.ProviderCriteria{
-		ProviderName: request.ProviderName,
-		Channel:      int32(request.Channel),
-	}, &pkggorm.PaginationParam{
-		Offset: int(request.Offset),
-		Limit:  int(request.Limit),
-	})
+	providers, err := s.svc.List(ctx)
 	if err != nil {
-		return &providerv1.SearchResponse{}, fmt.Errorf("[kuryr] failed to list providers: %w", err)
+		return &providerv1.ListResponse{}, fmt.Errorf("[kuryr] failed to list providers: %w", err)
 	}
 
-	if res.Total == 0 {
-		return &providerv1.SearchResponse{
-			Total:     0,
-			Providers: []*providerv1.Provider{},
-		}, nil
-	}
-
-	pbs := slice.Map(res.Records, func(_ int, p domain.Provider) *providerv1.Provider {
+	pbs := slice.Map(providers, func(_ int, p domain.Provider) *providerv1.Provider {
 		return s.domainToPb(p)
 	})
-	return &providerv1.SearchResponse{
-		Total:     res.Total,
+	return &providerv1.ListResponse{
 		Providers: pbs,
 	}, nil
 }
@@ -156,6 +129,24 @@ func (s *ProviderServer) FindById(ctx context.Context, request *providerv1.FindB
 
 	return &providerv1.FindByIdResponse{
 		Provider: s.domainToPb(p),
+	}, nil
+}
+
+func (s *ProviderServer) FindByChannel(ctx context.Context, request *providerv1.FindByChannelRequest) (*providerv1.FindByChannelResponse, error) {
+	if request == nil {
+		return &providerv1.FindByChannelResponse{}, fmt.Errorf("[kuryr] invalid request, provider is nil")
+	}
+
+	providers, err := s.svc.FindByChannel(ctx, domain.Channel(request.Channel))
+	if err != nil {
+		return &providerv1.FindByChannelResponse{}, fmt.Errorf("[kuryr] failed to find provider by channel: %w", err)
+	}
+
+	pbs := slice.Map(providers, func(_ int, p domain.Provider) *providerv1.Provider {
+		return s.domainToPb(p)
+	})
+	return &providerv1.FindByChannelResponse{
+		Providers: pbs,
 	}, nil
 }
 

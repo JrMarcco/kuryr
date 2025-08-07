@@ -8,9 +8,7 @@ import (
 	"github.com/JrMarcco/easy-kit/slice"
 	"github.com/JrMarcco/kuryr/internal/domain"
 	"github.com/JrMarcco/kuryr/internal/errs"
-	pkggorm "github.com/JrMarcco/kuryr/internal/pkg/gorm"
 	"github.com/JrMarcco/kuryr/internal/repository/dao"
-	"github.com/JrMarcco/kuryr/internal/search"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +17,7 @@ type ProviderRepo interface {
 	Delete(ctx context.Context, id uint64) error
 	Update(ctx context.Context, provider domain.Provider) error
 
-	Search(ctx context.Context, criteria search.ProviderCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.Provider], error)
+	List(ctx context.Context) ([]domain.Provider, error)
 	FindById(ctx context.Context, id uint64) (domain.Provider, error)
 	FindByChannel(ctx context.Context, channel string) ([]domain.Provider, error)
 }
@@ -42,23 +40,17 @@ func (r *DefaultProviderRepo) Update(ctx context.Context, provider domain.Provid
 	return r.dao.Update(ctx, r.toEntity(provider))
 }
 
-func (r *DefaultProviderRepo) Search(ctx context.Context, criteria search.ProviderCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.Provider], error) {
-	res, err := r.dao.Search(ctx, criteria, param)
+func (r *DefaultProviderRepo) List(ctx context.Context) ([]domain.Provider, error) {
+	entities, err := r.dao.List(ctx)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return pkggorm.NewPaginationResult([]domain.Provider{}, 0), nil
+			return nil, fmt.Errorf("%w: cannot find provider", errs.ErrRecordNotFound)
 		}
 		return nil, err
 	}
-
-	if res.Total == 0 {
-		return pkggorm.NewPaginationResult([]domain.Provider{}, 0), nil
-	}
-
-	providers := slice.Map(res.Records, func(_ int, src dao.Provider) domain.Provider {
+	return slice.Map(entities, func(_ int, src dao.Provider) domain.Provider {
 		return r.toDomain(src)
-	})
-	return pkggorm.NewPaginationResult(providers, res.Total), nil
+	}), nil
 }
 
 func (r *DefaultProviderRepo) FindById(ctx context.Context, id uint64) (domain.Provider, error) {

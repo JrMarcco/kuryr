@@ -62,28 +62,9 @@ COMMENT ON COLUMN provider_info.updated_at IS '更新时间戳 ( Unix 毫秒值 
 -- 查询场景：where provider_name like '?%' / where provider_name = ?
 -- CREATE INDEX idx_provider_info_provider_name ON provider_info(provider_name);
 
--- 字段索引：供应商名称
--- 查询场景：where provider_name like '%?%'
---      注意 gin 索引支持模糊匹配 where provider_name like '%keyword%'，
---      而 B-tree 索引只支持前缀匹配。
---
--- pg_trgm 为 postgresql 的官方拓展：
---      ├── pg_trgm 扩展 (Extension)
---      ├── 函数 (Functions)
---      │   ├── similarity()
---      │   ├── show_trgm()
---      │   ├── word_similarity()
---      │   └── ...
---      ├── 操作符 (Operators)
---      │   ├── % (相似性)
---      │   ├── <-> (距离)
---      │   ├── <<-> (左边界距离)
---      │   └── ...
---      └── 操作符类 (Operator Classes)
---      ├── gin_trgm_ops  -> GIN  索引用 ( 倒排索引：Generalized Inverted Index，擅长处理包含关系和精确查找 )
---      └── gist_trgm_ops -> GIST 索引用 ( 空间索引：Generalized Search Tree，基于 R-tree 等树状结构，长处理范围、距离、包含关系 )
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE INDEX idx_provider_info_provider_name_gin ON provider_info USING gin(provider_name gin_trgm_ops);
+-- 字段索引：渠道
+-- 查询场景：where channel = ?
+CREATE INDEX idx_provider_info_channel ON provider_info(channel);
 
 -- 渠道模板信息表
 DROP TABLE IF EXISTS channel_template;
