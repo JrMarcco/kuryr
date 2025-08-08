@@ -8,6 +8,7 @@ require (
 	github.com/JrMarcco/easy-kit v0.0.8
 	github.com/JrMarcco/kuryr-api v0.0.15
 	github.com/cespare/xxhash/v2 v2.3.0
+	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/redis/go-redis/v9 v9.11.0

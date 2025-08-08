@@ -7,7 +7,7 @@ import (
 
 	"github.com/JrMarcco/kuryr/internal/domain"
 	"github.com/JrMarcco/kuryr/internal/errs"
-	"github.com/JrMarcco/kuryr/internal/pkg/xsql"
+	pkgsql "github.com/JrMarcco/kuryr/internal/pkg/sql"
 	"github.com/JrMarcco/kuryr/internal/repository/cache"
 	"github.com/JrMarcco/kuryr/internal/repository/dao"
 	"go.uber.org/zap"
@@ -135,21 +135,21 @@ func (r *DefaultBizConfigRepo) toEntity(bizConfig domain.BizConfig) dao.BizConfi
 	}
 
 	if bizConfig.ChannelConfig != nil {
-		entity.ChannelConfig = xsql.JsonColumn[domain.ChannelConfig]{
+		entity.ChannelConfig = pkgsql.JsonColumn[domain.ChannelConfig]{
 			Val:   *bizConfig.ChannelConfig,
 			Valid: true,
 		}
 	}
 
 	if bizConfig.QuotaConfig != nil {
-		entity.QuotaConfig = xsql.JsonColumn[domain.QuotaConfig]{
+		entity.QuotaConfig = pkgsql.JsonColumn[domain.QuotaConfig]{
 			Val:   *bizConfig.QuotaConfig,
 			Valid: true,
 		}
 	}
 
 	if bizConfig.CallbackConfig != nil {
-		entity.CallbackConfig = xsql.JsonColumn[domain.CallbackConfig]{
+		entity.CallbackConfig = pkgsql.JsonColumn[domain.CallbackConfig]{
 			Val:   *bizConfig.CallbackConfig,
 			Valid: true,
 		}

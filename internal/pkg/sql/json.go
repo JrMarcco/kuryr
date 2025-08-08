@@ -1,4 +1,4 @@
-package xsql
+package sql
 
 import (
 	"database/sql/driver"

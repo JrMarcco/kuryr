@@ -46,11 +46,10 @@ type Generator struct {
 // ├── 12 位自增序列。
 func (g *Generator) NextId(bizId uint64, bizKey string) uint64 {
 	timestamp := uint64(time.Now().UnixMilli()) - epochMillis
-	uint64Hsah := hash.HashUint64(bizId, bizKey)
-
+	hashVal := hash.HashUint64(bizId, bizKey)
 	seq := atomic.AddUint64(&g.sequence, 1) - 1
 
-	return (timestamp&timestampMask)<<timestampShift | (uint64Hsah&hashMask)<<hashShift | (seq & sequenceMask)
+	return (timestamp&timestampMask)<<timestampShift | (hashVal&hashMask)<<hashShift | (seq & sequenceMask)
 }
 
 func NewGenerator() *Generator {

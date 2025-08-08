@@ -5,20 +5,20 @@ import (
 	"time"
 
 	"github.com/JrMarcco/kuryr/internal/domain"
-	"github.com/JrMarcco/kuryr/internal/pkg/xsql"
+	pkgsql "github.com/JrMarcco/kuryr/internal/pkg/sql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
 type BizConfig struct {
-	Id             uint64                                 `gorm:"column:id"`
-	OwnerType      string                                 `gorm:"column:owner_type"`
-	ChannelConfig  xsql.JsonColumn[domain.ChannelConfig]  `gorm:"column:channel_config;type:JSON"`
-	QuotaConfig    xsql.JsonColumn[domain.QuotaConfig]    `gorm:"column:quota_config;type:JSON"`
-	CallbackConfig xsql.JsonColumn[domain.CallbackConfig] `gorm:"column:callback_config;type:JSON"`
-	RateLimit      int32                                  `gorm:"column:rate_limit"`
-	CreatedAt      int64                                  `gorm:"column:created_at"`
-	UpdatedAt      int64                                  `gorm:"column:updated_at"`
+	Id             uint64                                   `gorm:"column:id"`
+	OwnerType      string                                   `gorm:"column:owner_type"`
+	ChannelConfig  pkgsql.JsonColumn[domain.ChannelConfig]  `gorm:"column:channel_config;type:JSON"`
+	QuotaConfig    pkgsql.JsonColumn[domain.QuotaConfig]    `gorm:"column:quota_config;type:JSON"`
+	CallbackConfig pkgsql.JsonColumn[domain.CallbackConfig] `gorm:"column:callback_config;type:JSON"`
+	RateLimit      int32                                    `gorm:"column:rate_limit"`
+	CreatedAt      int64                                    `gorm:"column:created_at"`
+	UpdatedAt      int64                                    `gorm:"column:updated_at"`
 }
 
 func (BizConfig) TableName() string {
