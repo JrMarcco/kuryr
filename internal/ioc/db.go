@@ -19,7 +19,7 @@ var DBFxOpt = fx.Provide(
 	InitBaseDB,
 	InitShardingDB,
 	fx.Annotate(
-		InitCblShardingStrategy,
+		InitCallbackLogSharding,
 		fx.As(new(sharding.Strategy)),
 		fx.ResultTags(`name:"cbl_sharding_strategy"`),
 	),
@@ -131,8 +131,8 @@ func InitShardingDB(zLogger *zap.Logger) *xsync.Map[string, *gorm.DB] {
 	return &dbs
 }
 
-// InitCblShardingStrategy 初始化 callback log 分库分表策略
-func InitCblShardingStrategy() *sharding.HashSharding {
+// InitCallbackLogSharding 初始化 callback log 分库分表策略。
+func InitCallbackLogSharding() *sharding.HashSharding {
 	return sharding.NewHashSharding(
 		"kuryr", "callback_log", 2, 4,
 	)

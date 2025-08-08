@@ -6,6 +6,6 @@ import (
 	"github.com/cespare/xxhash/v2"
 )
 
-func Hash(bizId uint64, bizKey string) uint64 {
+func HashUint64(bizId uint64, bizKey string) uint64 {
 	return xxhash.Sum64String(strconv.FormatUint(bizId, 10) + ":" + bizKey)
 }

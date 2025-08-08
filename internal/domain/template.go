@@ -144,6 +144,7 @@ type ChannelTemplateVersion struct {
 
 	ApplyRemark string `json:"apply_remark"` // 申请说明
 
+	// 这里的审批相关字段记录系统内的审批状态，不包含供应商侧的审批状态。
 	AuditId         uint64      `json:"audit_id"`         // 审批记录 id
 	AuditorId       uint64      `json:"auditor_id"`       // 审批人 id
 	AuditTime       int64       `json:"audit_time"`       // 审批时间
@@ -187,6 +188,7 @@ type ChannelTemplateProvider struct {
 	ProviderTplId   string  `json:"provider_tpl_id"`  // 供应商侧模板 id
 	ProviderChannel Channel `json:"provider_channel"` // 供应商渠道类型
 
+	// 这里的审批字段记录供应商侧的审批状态。
 	AuditRequestId  string      `json:"audit_request_id"` // 审批请求 id
 	AuditStatus     AuditStatus `json:"audit_status"`     // 审批状态
 	RejectionReason string      `json:"rejection_reason"` // 拒绝原因

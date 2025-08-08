@@ -3,7 +3,7 @@ package sharding
 import (
 	"fmt"
 
-	"github.com/JrMarcco/kuryr/internal/pkg/sharding/hash"
+	"github.com/JrMarcco/kuryr/internal/pkg/hash"
 	"github.com/JrMarcco/kuryr/internal/pkg/sharding/snowflake"
 )
 
@@ -19,7 +19,7 @@ type HashSharding struct {
 
 // Shard 根据 biz_id 和 biz_key 分库分表。
 func (s *HashSharding) Shard(bizId uint64, bizKey string) Dst {
-	hashVal := hash.Hash(bizId, bizKey)
+	hashVal := hash.HashUint64(bizId, bizKey)
 	dbSuffix := hashVal % s.dbShardCount
 	tableSuffix := (hashVal / s.dbShardCount) % s.tableShardCount
 

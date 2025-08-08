@@ -44,9 +44,15 @@ func (s *DefaultService) SaveVersion(ctx context.Context, version domain.Channel
 	return s.repo.SaveVersion(ctx, version)
 }
 
+// SaveProviders 新增版本关联供应商。
+// TODO: 需要增加调度任务自动提交到供应商侧审批。
 func (s *DefaultService) SaveProviders(ctx context.Context, providers []domain.ChannelTemplateProvider) error {
-	//TODO: unimplemented
-	panic("unimplemented")
+	for i := range providers {
+		if err := providers[i].Validate(); err != nil {
+			return err
+		}
+	}
+	return s.repo.SaveProviders(ctx, providers)
 }
 
 func (s *DefaultService) ActivateVersion(ctx context.Context, templateId uint64, versionId uint64) error {

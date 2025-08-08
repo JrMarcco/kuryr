@@ -19,8 +19,8 @@ type ChannelTplRepo interface {
 
 	ActivateVersion(ctx context.Context, templateId uint64, versionId uint64) error
 
-	// FindDetailById 查询详情，包含版本、供应商信息。
 	FindById(ctx context.Context, id uint64) (domain.ChannelTemplate, error)
+	// FindDetailById 查询详情，包含版本、供应商信息。
 	FindDetailById(ctx context.Context, id uint64) (domain.ChannelTemplate, error)
 
 	FindVersionById(ctx context.Context, id uint64) (domain.ChannelTemplateVersion, error)
@@ -46,6 +46,14 @@ func (r *DefaultChannelTplRepo) SaveProviders(ctx context.Context, providers []d
 	entities := slice.Map(providers, func(_ int, provider domain.ChannelTemplateProvider) dao.ChannelTemplateProvider {
 		return r.toProviderEntity(provider)
 	})
+
+	for i := range entities {
+		// 审批状态设置为 “待审核”，
+		// 等待调度任务提交到供应商审核。
+		entities[i].AuditStatus = string(domain.AuditStatusPending)
+		entities[i].LastReviewAt = 0
+	}
+
 	return r.dao.SaveProviders(ctx, entities)
 }
 

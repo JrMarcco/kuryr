@@ -19,6 +19,8 @@ func main() {
 
 		// 初始化 zap.Logger
 		ioc.LoggerFxOpt,
+		// 初始化 id 生成器
+		ioc.IdGeneratorFxOpt,
 		// 初始化 go cache
 		ioc.GoCacheFxOpt,
 		// 初始化 redis

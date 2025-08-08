@@ -56,7 +56,7 @@ func (p *Provider) Send(ctx context.Context, n domain.Notification) (domain.Send
 		return domain.SendResp{}, fmt.Errorf("%w: %w", errs.ErrFailedToSendNotification, err)
 	}
 
-	for _, status := range resp.PhoneNumbers {
+	for _, status := range resp.Results {
 		if !strings.EqualFold(status.Code, "OK") {
 			return domain.SendResp{}, fmt.Errorf("%w: code = %s, message = %s", errs.ErrFailedToSendNotification, status.Code, status.Message)
 		}

@@ -37,6 +37,12 @@ var RepoFxOpt = fx.Options(
 			dao.NewDefaultChannelTplDao,
 			fx.As(new(dao.ChannelTplDao)),
 		),
+
+		// callback log dao
+		fx.Annotate(
+			dao.NewCallbackLogDao,
+			fx.As(new(dao.CallbackLogDao)),
+		),
 	),
 
 	// cache
@@ -81,6 +87,12 @@ var RepoFxOpt = fx.Options(
 		fx.Annotate(
 			repository.NewDefaultChannelTplRepo,
 			fx.As(new(repository.ChannelTplRepo)),
+		),
+
+		// callback log repo
+		fx.Annotate(
+			repository.NewCallbackLogRepo,
+			fx.As(new(repository.CallbackLogRepo)),
 		),
 	),
 )
