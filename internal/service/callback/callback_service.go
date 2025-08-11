@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/JrMarcco/easy-grpc/client"
@@ -19,10 +20,6 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
-
-type Service interface {
-	SendCallback(ctx context.Context, startTime int64, batchSize int) error
-}
 
 var _ Service = (*DefaultService)(nil)
 
@@ -42,18 +39,25 @@ type DefaultService struct {
 func (s *DefaultService) SendCallback(ctx context.Context, startTime int64, batchSize int) error {
 	dsts := s.shardingStrategy.Broadcast()
 
-	// 使用 errgroup 实现并发处理
-	eg, ctx := errgroup.WithContext(ctx)
+	var errMu sync.Mutex
+	errMap := make(map[string]error)
 
 	// 限制并发数，避免数据库连接过多
 	sem := make(chan struct{}, 8)
+
+	// 使用 errgroup 实现并发处理
+	eg, ctx := errgroup.WithContext(ctx)
 
 	for _, dst := range dsts {
 		d := dst
 
 		eg.Go(func() error {
-			sem <- struct{}{}
-			defer func() { <-sem }()
+			select {
+			case sem <- struct{}{}:
+				defer func() { <-sem }()
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 
 			if err := s.dealDstCallbackLogs(ctx, d, startTime, batchSize); err != nil {
 				// 记录错误但不中断其他分片的处理
@@ -62,12 +66,26 @@ func (s *DefaultService) SendCallback(ctx context.Context, startTime int64, batc
 					zap.String("table", d.Table),
 					zap.Error(err),
 				)
+				errMu.Lock()
+				errMap[fmt.Sprintf("%s.%s", d.DB, d.Table)] = err
+				errMu.Unlock()
 			}
 			return nil
 		})
 	}
 
-	return eg.Wait()
+	_ = eg.Wait()
+
+	if len(errMap) > 0 {
+		s.logger.Warn("[kuryr] some shards failed during callback processing",
+			zap.Int("total_count", len(dsts)),
+			zap.Int("failed_count", len(errMap)),
+		)
+
+		return fmt.Errorf("[kuryr] some shards failed during callback processing")
+	}
+
+	return nil
 }
 
 func (s *DefaultService) dealDstCallbackLogs(ctx context.Context, dst sharding.Dst, startTime int64, batchSize int) error {
