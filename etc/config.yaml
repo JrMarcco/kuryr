@@ -48,5 +48,22 @@ db:
     - name: "kuryr_02"
       dsn: "postgres://jrmarcco:%3Cpasswd%3E@192.168.3.3:5432/kuryr_02?sslmode=disable&connect_timeout=1&statement_timeout=3000&idle_in_transaction_session_timeout=3000"
 
+sharding:
+  callback_log:
+    db_prefix: "kuryr"
+    table_prefix: "callback_log"
+    db_shard_count: 2
+    table_shard_count: 4
+
 provider:
   encrypt_key: "<encrypt_key>"
+
+grpc:
+  client:
+    load_balance:
+      name: "read_write_weight"           # 负载均衡 resolver 名称
+      timeout: 3000                       # grpc 请求超时时间，单位：毫秒
+      keep_alive:
+        time: 600000                      # keep alive 请求间隔时间，单位：毫秒
+        timeout: 10000                    # keep alive 请求超时时间，单位：毫秒
+        permit_without_stream: true

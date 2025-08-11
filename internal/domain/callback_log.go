@@ -14,7 +14,9 @@ const (
 //
 // 当消息发送策略为立即发送时，不会有回调日志。
 type CallbackLog struct {
-	Notification Notification      `json:"notification"`
+	Notification Notification `json:"notification"`
+
+	Id           uint64            `json:"id"`
 	RetriedTimes int32             `json:"retried_times"`
 	NextRetryAt  int64             `json:"next_retry_at"`
 	Status       CallbackLogStatus `json:"status"`

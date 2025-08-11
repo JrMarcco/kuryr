@@ -137,7 +137,7 @@ func (s *BizConfigServer) FindById(ctx context.Context, req *configv1.FindByIdRe
 		return &configv1.FindByIdResponse{}, fmt.Errorf("[kuryr] biz id is invalid: %d", req.Id)
 	}
 
-	bizConfig, err := s.svc.GetById(ctx, req.Id)
+	bizConfig, err := s.svc.FindById(ctx, req.Id)
 	if err != nil {
 		if errors.Is(err, errs.ErrRecordNotFound) {
 			return &configv1.FindByIdResponse{

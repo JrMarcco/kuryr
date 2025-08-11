@@ -19,7 +19,7 @@ type BizConfigRepo interface {
 
 	Delete(ctx context.Context, id uint64) error
 	DeleteInTx(ctx context.Context, tx *gorm.DB, id uint64) error
-	GetById(ctx context.Context, id uint64) (domain.BizConfig, error)
+	FindById(ctx context.Context, id uint64) (domain.BizConfig, error)
 }
 
 var _ BizConfigRepo = (*DefaultBizConfigRepo)(nil)
@@ -84,7 +84,7 @@ func (r *DefaultBizConfigRepo) clearCache(ctx context.Context, id uint64) {
 	}
 }
 
-func (r *DefaultBizConfigRepo) GetById(ctx context.Context, id uint64) (domain.BizConfig, error) {
+func (r *DefaultBizConfigRepo) FindById(ctx context.Context, id uint64) (domain.BizConfig, error) {
 	// 从本地缓存获取
 	bizConfig, err := r.localCache.Get(ctx, id)
 	if err == nil {

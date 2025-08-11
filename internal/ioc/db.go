@@ -133,7 +133,22 @@ func InitShardingDB(zLogger *zap.Logger) *xsync.Map[string, *gorm.DB] {
 
 // InitCallbackLogSharding 初始化 callback log 分库分表策略。
 func InitCallbackLogSharding() *sharding.HashSharding {
+	type config struct {
+		DBPrefix        string `mapstructure:"db_prefix"`
+		TablePrefix     string `mapstructure:"table_prefix"`
+		DBShardCount    uint64 `mapstructure:"db_shard_count"`
+		TableShardCount uint64 `mapstructure:"table_shard_count"`
+	}
+
+	cfg := config{}
+	if err := viper.UnmarshalKey("sharding.callback_log", &cfg); err != nil {
+		panic(err)
+	}
+
 	return sharding.NewHashSharding(
-		"kuryr", "callback_log", 2, 4,
+		cfg.DBPrefix,
+		cfg.TablePrefix,
+		cfg.DBShardCount,
+		cfg.TableShardCount,
 	)
 }

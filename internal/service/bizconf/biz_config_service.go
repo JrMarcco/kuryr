@@ -14,7 +14,7 @@ import (
 type Service interface {
 	Save(ctx context.Context, bizConfig domain.BizConfig) error
 	Delete(ctx context.Context, id uint64) error
-	GetById(ctx context.Context, id uint64) (domain.BizConfig, error)
+	FindById(ctx context.Context, id uint64) (domain.BizConfig, error)
 }
 
 var _ Service = (*DefaultService)(nil)
@@ -37,11 +37,11 @@ func (s *DefaultService) Delete(ctx context.Context, id uint64) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *DefaultService) GetById(ctx context.Context, id uint64) (domain.BizConfig, error) {
+func (s *DefaultService) FindById(ctx context.Context, id uint64) (domain.BizConfig, error) {
 	if id == 0 {
 		return domain.BizConfig{}, fmt.Errorf("%w: invalidate biz config id [ %d ]", errs.ErrInvalidParam, id)
 	}
-	return s.repo.GetById(ctx, id)
+	return s.repo.FindById(ctx, id)
 }
 
 func NewDefaultService(repo repository.BizConfigRepo) *DefaultService {
