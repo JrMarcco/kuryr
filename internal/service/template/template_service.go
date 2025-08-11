@@ -52,7 +52,14 @@ func (s *DefaultService) SaveProviders(ctx context.Context, providers []domain.C
 			return err
 		}
 	}
-	return s.repo.SaveProviders(ctx, providers)
+
+	err := s.repo.SaveProviders(ctx, providers)
+	if err != nil {
+		return err
+	}
+
+	// TODO: 提交消息到 kafka，消费者端来提交模板到供应商侧进行审核
+	return nil
 }
 
 func (s *DefaultService) ActivateVersion(ctx context.Context, templateId uint64, versionId uint64) error {
