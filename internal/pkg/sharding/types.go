@@ -1,6 +1,9 @@
 package sharding
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // Strategy 分库分表策略
 type Strategy interface {
@@ -16,6 +19,10 @@ type Dst struct {
 
 	DB    string
 	Table string
+}
+
+func (d Dst) FullTable() string {
+	return fmt.Sprintf("%s.%s", d.DB, d.Table)
 }
 
 type contextKeyDst struct{}

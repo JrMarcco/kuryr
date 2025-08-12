@@ -62,12 +62,11 @@ func (s *DefaultService) SendCallback(ctx context.Context, startTime int64, batc
 			if err := s.dealDstCallbackLogs(ctx, d, startTime, batchSize); err != nil {
 				// 记录错误但不中断其他分片的处理
 				s.logger.Error("[kuryr] failed to deal with dst callback logs",
-					zap.String("db", d.DB),
-					zap.String("table", d.Table),
+					zap.String("table", d.FullTable()),
 					zap.Error(err),
 				)
 				errMu.Lock()
-				errMap[fmt.Sprintf("%s.%s", d.DB, d.Table)] = err
+				errMap[dst.FullTable()] = err
 				errMu.Unlock()
 			}
 			return nil
