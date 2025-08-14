@@ -31,7 +31,7 @@ func (s *HashSharding) Shard(bizId uint64, bizKey string) Dst {
 	}
 }
 
-func (s *HashSharding) ShardWithId(id uint64) Dst {
+func (s *HashSharding) DstFromId(id uint64) Dst {
 	hashVal := snowflake.ExtractHash(id)
 	dbSuffix := hashVal % s.dbShardCount
 	tableSuffix := (hashVal / s.dbShardCount) % s.tableShardCount

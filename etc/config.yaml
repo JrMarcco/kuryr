@@ -54,6 +54,7 @@ sharding:
     table_prefix: "callback_log"
     db_shard_count: 2
     table_shard_count: 4
+    broadcast_mode: "round_robin"
 
 provider:
   encrypt_key: "<encrypt_key>"

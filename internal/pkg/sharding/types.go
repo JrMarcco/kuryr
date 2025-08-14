@@ -8,7 +8,7 @@ import (
 // Strategy 分库分表策略
 type Strategy interface {
 	Shard(bizId uint64, bizKey string) Dst
-	ShardWithId(id uint64) Dst
+	DstFromId(id uint64) Dst
 	Broadcast() []Dst
 }
 

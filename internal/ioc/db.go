@@ -132,12 +132,13 @@ func InitShardingDB(zLogger *zap.Logger) *xsync.Map[string, *gorm.DB] {
 }
 
 // InitCallbackLogSharding 初始化 callback log 分库分表策略。
-func InitCallbackLogSharding() *sharding.HashSharding {
+func InitCallbackLogSharding() *sharding.BalancedSharding {
 	type config struct {
 		DBPrefix        string `mapstructure:"db_prefix"`
 		TablePrefix     string `mapstructure:"table_prefix"`
 		DBShardCount    uint64 `mapstructure:"db_shard_count"`
 		TableShardCount uint64 `mapstructure:"table_shard_count"`
+		BroadcastMode   string `mapstructure:"broadcast_mode"`
 	}
 
 	cfg := config{}
@@ -145,10 +146,12 @@ func InitCallbackLogSharding() *sharding.HashSharding {
 		panic(err)
 	}
 
-	return sharding.NewHashSharding(
+	base := sharding.NewHashSharding(
 		cfg.DBPrefix,
 		cfg.TablePrefix,
 		cfg.DBShardCount,
 		cfg.TableShardCount,
 	)
+
+	return sharding.NewBalancedSharding(base, sharding.BroadcastMode(cfg.BroadcastMode))
 }

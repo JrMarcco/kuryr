@@ -36,40 +36,60 @@ type DefaultService struct {
 	logger *zap.Logger
 }
 
+// SendCallback 以回调日志为依据发送回调请求。
 func (s *DefaultService) SendCallback(ctx context.Context, startTime int64, batchSize int) error {
 	dsts := s.shardingStrategy.Broadcast()
+
+	// 按数据库分组，避免连接集中在同一个库
+	dbGroup := make(map[string][]sharding.Dst)
+	for _, dst := range dsts {
+		dbGroup[dst.DB] = append(dbGroup[dst.DB], dst)
+	}
 
 	var errMu sync.Mutex
 	errMap := make(map[string]error)
 
-	// 限制并发数，避免数据库连接过多
-	sem := make(chan struct{}, 8)
-
 	// 使用 errgroup 实现并发处理
 	eg, ctx := errgroup.WithContext(ctx)
 
-	for _, dst := range dsts {
-		d := dst
+	for _, tbs := range dbGroup {
+		dbTables := tbs
 
 		eg.Go(func() error {
-			select {
-			case sem <- struct{}{}:
-				defer func() { <-sem }()
-			case <-ctx.Done():
-				return ctx.Err()
-			}
+			// 限制并发数，避免数据库连接过多。
+			// 注意：
+			//  这里限制的是每个库的最大并发数。
+			// TODO: 这里最大并发数可以改成配置。
+			sem := make(chan struct{}, 4)
 
-			if err := s.dealDstCallbackLogs(ctx, d, startTime, batchSize); err != nil {
-				// 记录错误但不中断其他分片的处理
-				s.logger.Error("[kuryr] failed to deal with dst callback logs",
-					zap.String("table", d.FullTable()),
-					zap.Error(err),
-				)
-				errMu.Lock()
-				errMap[dst.FullTable()] = err
-				errMu.Unlock()
+			// 每个库开一个 errgroup 并发查询。
+			dbEg, dbCtx := errgroup.WithContext(ctx)
+
+			for _, dst := range dbTables {
+				d := dst
+
+				dbEg.Go(func() error {
+					select {
+					case sem <- struct{}{}:
+						defer func() { <-sem }()
+					case <-dbCtx.Done():
+						return dbCtx.Err()
+					}
+
+					if err := s.dealDstCallbackLogs(dbCtx, d, startTime, batchSize); err != nil {
+						// 记录错误但不中断其他分片的处理
+						s.logger.Error("[kuryr] failed to deal with dst callback logs",
+							zap.String("table", d.FullTable()),
+							zap.Error(err),
+						)
+						errMu.Lock()
+						errMap[d.FullTable()] = err
+						errMu.Unlock()
+					}
+					return nil
+				})
 			}
-			return nil
+			return dbEg.Wait()
 		})
 	}
 

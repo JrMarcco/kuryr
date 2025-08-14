@@ -3,12 +3,15 @@ package dao
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/JrMarcco/easy-kit/xsync"
 	"github.com/JrMarcco/kuryr/internal/domain"
 	"github.com/JrMarcco/kuryr/internal/pkg/idgen"
 	"github.com/JrMarcco/kuryr/internal/pkg/sharding"
+	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -84,7 +87,7 @@ func (d *DefaultCallbackLogDao) BatchUpdate(ctx context.Context, dst sharding.Ds
 			}
 
 			// 需要指定更新的字段，避免误更新其他字段。
-			err := tx.Model(&CallbackLog{}).
+			err := tx.Table(dst.Table).
 				Clauses(clause.OnConflict{
 					// 只更新不插入。
 					UpdateAll: false,
@@ -99,8 +102,61 @@ func (d *DefaultCallbackLogDao) BatchUpdate(ctx context.Context, dst sharding.Ds
 	})
 }
 func (d *DefaultCallbackLogDao) FindByNotificationIds(ctx context.Context, notificationIds []uint64) ([]CallbackLog, error) {
-	//TODO: implement me
-	panic("implement me")
+	tbs := make(map[string][]uint64)
+	for _, id := range notificationIds {
+		dst := d.shardingStrategy.DstFromId(id)
+		tbs[dst.FullTable()] = append(tbs[dst.FullTable()], id)
+	}
+
+	var mu sync.Mutex
+	res := make([]CallbackLog, 0, len(notificationIds))
+
+	eg, ctx := errgroup.WithContext(ctx)
+	sem := make(chan struct{}, 4)
+
+	for fullTable, ids := range tbs {
+		seg := strings.Split(fullTable, ".")
+
+		eg.Go(func() error {
+			select {
+			case sem <- struct{}{}:
+				defer func() { <-sem }()
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+
+			if len(seg) != 2 || seg[1] == "" {
+				return fmt.Errorf("[kuryr] invalid full table [ %s ]", fullTable)
+			}
+
+			db, ok := d.dbs.Load(seg[0])
+			if !ok {
+				return fmt.Errorf("[kuryr] failed to load db [ %s ]", seg[0])
+			}
+
+			var logs []CallbackLog
+			err := db.WithContext(ctx).Table(seg[1]).
+				Where("notification_id IN ?", ids).
+				Find(&logs).Error
+			if err != nil {
+				return err
+			}
+
+			if len(logs) != 0 {
+				mu.Lock()
+				defer mu.Unlock()
+
+				res = append(res, logs...)
+			}
+			return nil
+		})
+
+	}
+
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (d *DefaultCallbackLogDao) BatchFindByTime(ctx context.Context, dst sharding.Dst, startTime int64, startId uint64, batchSize int) ([]CallbackLog, uint64, error) {
@@ -113,7 +169,7 @@ func (d *DefaultCallbackLogDao) BatchFindByTime(ctx context.Context, dst shardin
 
 	var logs []CallbackLog
 
-	err := db.WithContext(ctx).Model(&CallbackLog{}).
+	err := db.WithContext(ctx).Table(dst.Table).
 		Where("next_retry_at <= ?", startTime).
 		Where("callback_status IN ?", []string{string(domain.CallbackLogStatusPending), string(domain.CallbackLogStatusPrepare)}).
 		Where("id > ?", startId).
