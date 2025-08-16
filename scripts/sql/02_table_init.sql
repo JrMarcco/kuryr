@@ -44,8 +44,8 @@ COMMENT ON COLUMN biz_info.updated_at IS '更新时间戳 ( Unix 毫秒值 )';
 --      │   ├── <<-> (左边界距离)
 --      │   └── ...
 --      └── 操作符类 (Operator Classes)
---      ├── gin_trgm_ops  -> GIN  索引用 ( 倒排索引：Generalized Inverted Index，擅长处理包含关系和精确查找 )
---      └── gist_trgm_ops -> GIST 索引用 ( 空间索引：Generalized Search Tree，基于 R-tree 等树状结构，擅长处理范围、距离、包含关系 )
+--          ├── gin_trgm_ops  -> GIN  索引用 ( 倒排索引：Generalized Inverted Index，擅长处理包含关系和精确查找 )
+--          └── gist_trgm_ops -> GIST 索引用 ( 空间索引：Generalized Search Tree，基于 R-tree 等树状结构，擅长处理范围、距离、包含关系 )
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX idx_biz_info_biz_name_gin ON biz_info USING gin(biz_name gin_trgm_ops);
 

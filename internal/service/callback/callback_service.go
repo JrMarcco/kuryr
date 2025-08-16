@@ -154,7 +154,7 @@ func (s *DefaultService) batchSendAndUpdateStatus(ctx context.Context, dst shard
 		changed, err := s.sendAndSetChangedFields(ctx, &logs[i])
 		if err != nil {
 			s.logger.Warn("[kuryr] failed to send callback",
-				zap.Uint64("notification_id", logs[i].Notification.Id),
+				zap.String("notification_id", logs[i].Notification.Id),
 				zap.Error(err),
 			)
 			continue
@@ -255,7 +255,8 @@ func (s *DefaultService) buildGrpcRequest(notification domain.Notification) *cli
 	}
 
 	return &clientv1.SendResultNotifyRequest{
-		NotificationId: notification.Id,
+		// TODO: notification uint64 -> string
+		// NotificationId: notification.Id,
 		RawRequest: &notificationv1.SendRequest{
 			Notification: &notificationv1.Notification{
 				BizKey:    notification.BizKey,
@@ -266,8 +267,9 @@ func (s *DefaultService) buildGrpcRequest(notification domain.Notification) *cli
 			},
 		},
 		Result: &notificationv1.SendResult{
-			NotificationId: notification.Id,
-			Status:         s.transferSendStatus(notification.SendStatus),
+			// TODO: notification uint64 -> string
+			// NotificationId: notification.Id,
+			Status: s.transferSendStatus(notification.SendStatus),
 		},
 	}
 }

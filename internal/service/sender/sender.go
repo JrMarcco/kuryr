@@ -10,25 +10,9 @@ import (
 	"go.uber.org/zap"
 )
 
-//go:generate mockgen -source=sender.go -destination=./mock/sender.mock.go -package=sendermock -typed Sender
-
-// Sender 消息发送接口，负责消息的实际发送逻辑。
-// Sender 依照根据渠道调用不同的 channel.ChannelSender 来发送消息。
-//
-// notification.SendService 负责处理消息发送前的准备工作 ( Notification 记录入库，配额管理等 )，并调用 Sender 发送消息。
-//
-// 注意：
-//
-//	这里使用了 pool.TaskPool 来管理发送任务，避免阻塞主线程。
-type Sender interface {
-	Send(ctx context.Context, n domain.Notification) (domain.SendResp, error)
-	BatchSend(ctx context.Context, ns []domain.Notification) (domain.BatchSendResp, error)
-}
-
-var _ Sender = (*DefaultSender)(nil)
+var _ ports.NotificationSender = (*DefaultSender)(nil)
 
 type DefaultSender struct {
-	bizConfigRepo    repository.BizConfigRepo
 	callbackLogRepo  repository.CallbackLogRepo
 	notificationRepo repository.NotificationRepo
 
@@ -65,7 +49,22 @@ func (s *DefaultSender) Send(ctx context.Context, n domain.Notification) (domain
 		return domain.SendResp{}, err
 	}
 
-	// TODO: 处理回调，写入一条 callback_log 等待异步任务执行
+	callbackLog := domain.CallbackLog{
+		Notification: domain.Notification{
+			Id:         n.Id,
+			SendStatus: n.SendStatus,
+		},
+		BizId:        n.BizId,
+		BizKey:       n.BizKey,
+		RetriedTimes: 0,
+		NextRetryAt:  0,
+		Status:       domain.CallbackLogStatusPrepare,
+	}
+	err = s.callbackLogRepo.Save(ctx, callbackLog)
+	if err != nil {
+		// 回调保存失败记录日志，不影响发送结果。
+		s.logger.Error("failed to save callback log for notification [ %d ]", zap.String("notification_id", n.Id), zap.Error(err))
+	}
 
 	return domain.SendResp{
 		Result: res,
@@ -77,7 +76,6 @@ func (s *DefaultSender) BatchSend(ctx context.Context, ns []domain.Notification)
 }
 
 func NewDefaultSender(
-	bizConfigRepo repository.BizConfigRepo,
 	callbackLogRepo repository.CallbackLogRepo,
 	notificationRepo repository.NotificationRepo,
 	channelSender ports.ChannelSender,
@@ -85,7 +83,6 @@ func NewDefaultSender(
 	logger *zap.Logger,
 ) *DefaultSender {
 	return &DefaultSender{
-		bizConfigRepo:    bizConfigRepo,
 		callbackLogRepo:  callbackLogRepo,
 		notificationRepo: notificationRepo,
 		channelSender:    channelSender,

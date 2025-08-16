@@ -89,7 +89,7 @@ func (c SendStrategyConfig) SendTimeWindow() (startAt, endAt time.Time) {
 
 // SendResult 消息发送结果领域对象
 type SendResult struct {
-	NotificationId uint64
+	NotificationId string
 	SendStatus     SendStatus
 }
 
@@ -105,5 +105,5 @@ type BatchSendResp struct {
 
 // BatchAsyncSendResp 批量异步发送请求响应领域对象
 type BatchAsyncSendResp struct {
-	NotificationIds []uint64
+	NotificationIds []string
 }

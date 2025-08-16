@@ -20,7 +20,10 @@ import (
 type CallbackLog struct {
 	Id uint64 `gorm:"column:id"`
 
-	NotificationId     uint64 `gorm:"column:notification_id"`
+	BizId  uint64 `gorm:"column:biz_id"`
+	BizKey string `gorm:"column:biz_key"`
+
+	NotificationId     string `gorm:"column:notification_id"`
 	NotificationStatus string `gorm:"column:notification_status"` // 消息发送状态，与 domain.Notification.SendStatus 对应
 
 	RetriedTimes   int32  `gorm:"column:retried_times"`
@@ -41,6 +44,8 @@ func (CallbackLog) TableName() string {
 //
 //	这里使用分库分表设计。
 type CallbackLogDao interface {
+	Save(ctx context.Context, log CallbackLog) error
+
 	BatchUpdate(ctx context.Context, dst sharding.Dst, logs []CallbackLog) error
 
 	FindByNotificationIds(ctx context.Context, notificationIds []uint64) ([]CallbackLog, error)
@@ -54,6 +59,24 @@ type DefaultCallbackLogDao struct {
 
 	idGenerator      idgen.Generator
 	shardingStrategy sharding.Strategy
+}
+
+func (d *DefaultCallbackLogDao) Save(ctx context.Context, log CallbackLog) error {
+	if log.Id == 0 {
+		log.Id = d.idGenerator.NextId(log.BizId, log.BizKey)
+	}
+
+	now := time.Now().UnixMilli()
+	log.CreatedAt = now
+	log.UpdatedAt = now
+
+	dst := d.shardingStrategy.DstFromId(log.Id)
+	db, ok := d.dbs.Load(dst.DB)
+	if !ok {
+		return fmt.Errorf("[kuryr] failed to load db [ %s ]", dst.DB)
+	}
+
+	return db.WithContext(ctx).Table(dst.Table).Create(&log).Error
 }
 
 func (d *DefaultCallbackLogDao) BatchUpdate(ctx context.Context, dst sharding.Dst, logs []CallbackLog) error {

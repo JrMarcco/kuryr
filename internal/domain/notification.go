@@ -28,7 +28,7 @@ type Template struct {
 
 // Notification 通知消息领域对象。
 type Notification struct {
-	Id             uint64             `json:"id"`              // 消息 id
+	Id             string             `json:"id"`              // 消息 id ( MongoDB 的 ObjectID )
 	BizId          uint64             `json:"biz_id"`          // 业务 id
 	BizKey         string             `json:"biz_key"`         // 业务 key
 	Receivers      []string           `json:"receivers"`       // 接收者

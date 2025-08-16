@@ -17,6 +17,8 @@ type CallbackLog struct {
 	Notification Notification `json:"notification"`
 
 	Id           uint64            `json:"id"`
+	BizId        uint64            `json:"biz_id"`
+	BizKey       string            `json:"biz_key"`
 	RetriedTimes int32             `json:"retried_times"`
 	NextRetryAt  int64             `json:"next_retry_at"`
 	Status       CallbackLogStatus `json:"status"` // 回调状态

@@ -10,6 +10,8 @@ import (
 )
 
 type CallbackLogRepo interface {
+	Save(ctx context.Context, log domain.CallbackLog) error
+
 	BatchUpdate(ctx context.Context, dst sharding.Dst, logs []domain.CallbackLog) error
 
 	FindByNotificationIds(ctx context.Context, notificationIds []uint64) ([]domain.CallbackLog, error)
@@ -20,6 +22,10 @@ var _ CallbackLogRepo = (*DefaultCallbackLogRepo)(nil)
 
 type DefaultCallbackLogRepo struct {
 	dao dao.CallbackLogDao
+}
+
+func (r *DefaultCallbackLogRepo) Save(ctx context.Context, log domain.CallbackLog) error {
+	return r.dao.Save(ctx, r.toEntity(log))
 }
 
 func (r *DefaultCallbackLogRepo) BatchUpdate(ctx context.Context, dst sharding.Dst, logs []domain.CallbackLog) error {
@@ -49,6 +55,8 @@ func (r *DefaultCallbackLogRepo) BatchFindByTime(ctx context.Context, dst shardi
 func (r *DefaultCallbackLogRepo) toEntity(log domain.CallbackLog) dao.CallbackLog {
 	return dao.CallbackLog{
 		Id:                 log.Id,
+		BizId:              log.BizId,
+		BizKey:             log.BizKey,
 		NotificationId:     log.Notification.Id,
 		NotificationStatus: string(log.Notification.SendStatus),
 		RetriedTimes:       log.RetriedTimes,
@@ -59,7 +67,9 @@ func (r *DefaultCallbackLogRepo) toEntity(log domain.CallbackLog) dao.CallbackLo
 
 func (r *DefaultCallbackLogRepo) toDomain(entity dao.CallbackLog) domain.CallbackLog {
 	return domain.CallbackLog{
-		Id: entity.Id,
+		Id:     entity.Id,
+		BizId:  entity.BizId,
+		BizKey: entity.BizKey,
 		Notification: domain.Notification{
 			Id:         entity.NotificationId,
 			SendStatus: domain.SendStatus(entity.NotificationStatus),
