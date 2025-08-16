@@ -20,10 +20,12 @@ import (
 type CallbackLog struct {
 	Id uint64 `gorm:"column:id"`
 
-	NotificationId uint64 `gorm:"column:notification_id"`
+	NotificationId     uint64 `gorm:"column:notification_id"`
+	NotificationStatus string `gorm:"column:notification_status"` // 消息发送状态，与 domain.Notification.SendStatus 对应
+
 	RetriedTimes   int32  `gorm:"column:retried_times"`
 	NextRetryAt    int64  `gorm:"column:next_retry_at"`
-	CallbackStatus string `gorm:"column:callback_status"`
+	CallbackStatus string `gorm:"column:callback_status"` // 回调状态
 
 	CreatedAt int64 `gorm:"column:created_at"`
 	UpdatedAt int64 `gorm:"column:updated_at"`

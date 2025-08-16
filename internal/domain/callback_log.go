@@ -19,5 +19,5 @@ type CallbackLog struct {
 	Id           uint64            `json:"id"`
 	RetriedTimes int32             `json:"retried_times"`
 	NextRetryAt  int64             `json:"next_retry_at"`
-	Status       CallbackLogStatus `json:"status"`
+	Status       CallbackLogStatus `json:"status"` // 回调状态
 }

@@ -37,7 +37,7 @@ type DefaultService struct {
 }
 
 // SendCallback 以回调日志为依据发送回调请求。
-func (s *DefaultService) SendCallback(ctx context.Context, startTime int64, batchSize int) error {
+func (s *DefaultService) Send(ctx context.Context, startTime int64, batchSize int) error {
 	dsts := s.shardingStrategy.Broadcast()
 
 	// 按数据库分组，避免连接集中在同一个库
@@ -107,6 +107,16 @@ func (s *DefaultService) SendCallback(ctx context.Context, startTime int64, batc
 	return nil
 }
 
+func (s *DefaultService) SendByNotification(ctx context.Context, n domain.Notification) error {
+	// TODO: implement me
+	panic("implement me")
+}
+
+func (s *DefaultService) SendByNotifications(ctx context.Context, ns []domain.Notification) error {
+	// TODO: implement me
+	panic("implement me")
+}
+
 func (s *DefaultService) dealDstCallbackLogs(ctx context.Context, dst sharding.Dst, startTime int64, batchSize int) error {
 	nextStartId := uint64(0)
 
@@ -158,6 +168,7 @@ func (s *DefaultService) batchSendAndUpdateStatus(ctx context.Context, dst shard
 	return s.logRepo.BatchUpdate(ctx, dst, needUpdates)
 }
 
+// sendAndSetChangedFields 发送请求并设置需要更新的字段。
 func (s *DefaultService) sendAndSetChangedFields(ctx context.Context, log *domain.CallbackLog) (bool, error) {
 	resp, err := s.send(ctx, log.Notification)
 	if err != nil {

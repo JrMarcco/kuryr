@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/JrMarcco/kuryr/internal/domain"
 )
 
 type state string
@@ -17,6 +19,9 @@ const (
 
 var _ Service = (*CircuitBreakerService)(nil)
 
+// CircuitBreakerService 带熔断机制的回调服务。
+//
+// 针对广播全表的回调请求，使用熔断机制来保护后端服务。
 type CircuitBreakerService struct {
 	DefaultService
 
@@ -35,7 +40,7 @@ type CircuitBreakerService struct {
 	coolDownPeriod time.Duration
 }
 
-func (s *CircuitBreakerService) SendCallback(ctx context.Context, startTime int64, batchSize int) error {
+func (s *CircuitBreakerService) Send(ctx context.Context, startTime int64, batchSize int) error {
 	s.mu.RLock()
 	state := s.state
 	s.mu.RUnlock()
@@ -54,7 +59,7 @@ func (s *CircuitBreakerService) SendCallback(ctx context.Context, startTime int6
 		s.mu.Unlock()
 	}
 
-	err := s.DefaultService.SendCallback(ctx, startTime, batchSize)
+	err := s.DefaultService.Send(ctx, startTime, batchSize)
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -77,4 +82,12 @@ func (s *CircuitBreakerService) SendCallback(ctx context.Context, startTime int6
 	}
 
 	return nil
+}
+
+func (s *CircuitBreakerService) SendByNotification(ctx context.Context, n domain.Notification) error {
+	return s.DefaultService.SendByNotification(ctx, n)
+}
+
+func (s *CircuitBreakerService) SendByNotifications(ctx context.Context, ns []domain.Notification) error {
+	return s.DefaultService.SendByNotifications(ctx, ns)
 }

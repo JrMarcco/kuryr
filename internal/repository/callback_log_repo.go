@@ -48,18 +48,22 @@ func (r *DefaultCallbackLogRepo) BatchFindByTime(ctx context.Context, dst shardi
 
 func (r *DefaultCallbackLogRepo) toEntity(log domain.CallbackLog) dao.CallbackLog {
 	return dao.CallbackLog{
-		Id:             log.Id,
-		NotificationId: log.Notification.Id,
-		RetriedTimes:   log.RetriedTimes,
-		NextRetryAt:    log.NextRetryAt,
-		CallbackStatus: string(log.Status),
+		Id:                 log.Id,
+		NotificationId:     log.Notification.Id,
+		NotificationStatus: string(log.Notification.SendStatus),
+		RetriedTimes:       log.RetriedTimes,
+		NextRetryAt:        log.NextRetryAt,
+		CallbackStatus:     string(log.Status),
 	}
 }
 
 func (r *DefaultCallbackLogRepo) toDomain(entity dao.CallbackLog) domain.CallbackLog {
 	return domain.CallbackLog{
-		Id:           entity.Id,
-		Notification: domain.Notification{Id: entity.NotificationId},
+		Id: entity.Id,
+		Notification: domain.Notification{
+			Id:         entity.NotificationId,
+			SendStatus: domain.SendStatus(entity.NotificationStatus),
+		},
 		RetriedTimes: entity.RetriedTimes,
 		NextRetryAt:  entity.NextRetryAt,
 		Status:       domain.CallbackLogStatus(entity.CallbackStatus),

@@ -15,7 +15,7 @@ require (
 	github.com/spf13/pflag v1.0.7
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.1.10
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.1.11
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.1.0
 	go.etcd.io/etcd/client/v3 v3.6.4
 	go.uber.org/fx v1.24.0
@@ -59,7 +59,6 @@ require (
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
-	golang.org/x/time v0.6.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250811230008-5f3141c8851a // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250811230008-5f3141c8851a // indirect
 	google.golang.org/protobuf v1.36.7 // indirect
