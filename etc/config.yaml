@@ -23,6 +23,7 @@ etcd:
     key_file: "etc/etcd-certs/client-key.pem"
     ca_file: "etc/etcd-certs/ca.pem"
     insecure_skip_verify: false
+    server_name: ""                               # 可填 Atlas/服务端证书 CN/SAN 名称
 
 registry:
   lease_ttl: 30 # 单位：秒，这里和 etcd api 保持一直所以是秒单位
@@ -34,6 +35,19 @@ cache:
 redis:
   addr: "192.168.3.3:6379"
   password: "<passwd>"
+
+mongo:
+  uri: "mongodb://192.168.3.3:27017"  # 连接地址
+  app_name: "kuryr"                   # 应用名称
+  username: "jrmarcco"
+  password: "<passwd>"
+  auth_source: "admin"
+  max_pool_size: 100                  # 最大连接数
+  max_conn_idle_time: 10000           # 单位：毫秒
+  connect_timeout: 10000              # 单位：毫秒
+  startup_timeout: 10000              # 单位：毫秒
+  shutdown_timeout: 10000             # 单位：毫秒
+  server_selection_timeout: 15000     # 单位：毫秒
 
 db:
   log_level: "info"

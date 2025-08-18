@@ -5,7 +5,7 @@ set -e
 echo "=== 生成 etcd 3节点集群 Ed25519 TLS 证书（仅 DNS 配置）==="
 
 # 创建证书目录
-CERT_DIR="./kuryr-certs"
+CERT_DIR="./certs"
 mkdir -p $CERT_DIR
 cd $CERT_DIR
 
@@ -17,7 +17,7 @@ openssl genpkey -algorithm Ed25519 -out ca-key.pem
 
 echo "2. 生成 CA 证书"
 openssl req -new -x509 -key ca-key.pem -days 365 -out ca.pem \
-    -subj "/C=CN/ST=Beijing/L=Beijing/O=Kuryr/OU=CA/CN=kuryr-etcd-ca"
+    -subj "/C=CN/ST=Beijing/L=Beijing/O=Kuryr/OU=CA/CN=etcd-ca"
 
 echo "3. 生成 etcd 服务器私钥 (Ed25519)"
 openssl genpkey -algorithm Ed25519 -out server-key.pem
@@ -138,13 +138,3 @@ echo -e "\n🔍 证书算法验证："
 echo "CA 证书算法: $(openssl x509 -in ca.pem -text -noout | grep "Public Key Algorithm" | head -1 | awk '{print $NF}')"
 echo "服务器证书算法: $(openssl x509 -in server.pem -text -noout | grep "Public Key Algorithm" | head -1 | awk '{print $NF}')"
 echo "客户端证书算法: $(openssl x509 -in client.pem -text -noout | grep "Public Key Algorithm" | head -1 | awk '{print $NF}')"
-
-echo -e "\n🚀 后续步骤："
-echo "1. 启动集群: docker-compose up -d"
-echo "2. 验证集群: ./scripts/etcdctl.sh health"
-echo "3. 测试 DNS 解析: docker-compose exec etcd-kuryr-1 nslookup etcd-kuryr-2"
-
-echo -e "\n💡 DNS 配置说明："
-echo "- 容器间通信使用: etcd-kuryr-1, etcd-kuryr-2, etcd-kuryr-3"
-echo "- 客户端连接使用: localhost:52379, localhost:52381, localhost:52383"
-echo "- 证书支持所有必要的 DNS 名称，无需配置 IP 地址"

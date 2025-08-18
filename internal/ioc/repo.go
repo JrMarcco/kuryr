@@ -15,6 +15,12 @@ var RepoFxOpt = fx.Module(
 	"repository",
 	// dao
 	fx.Provide(
+		// notification dao
+		fx.Annotate(
+			dao.NewDefaultNotificationDao,
+			fx.As(new(dao.NotificationDao)),
+		),
+
 		// biz info dao
 		fx.Annotate(
 			dao.NewDefaultBizInfoDao,

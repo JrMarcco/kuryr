@@ -15,7 +15,8 @@ type NotificationRepo interface {
 
 var _ NotificationRepo = (*DefaultNotificationRepo)(nil)
 
-type DefaultNotificationRepo struct{}
+type DefaultNotificationRepo struct {
+}
 
 func (r *DefaultNotificationRepo) Create(ctx context.Context, n domain.Notification) (domain.Notification, error) {
 	// TODO: implement me
