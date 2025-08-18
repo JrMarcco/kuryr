@@ -2,12 +2,15 @@ package sender
 
 import (
 	"context"
+	"fmt"
+	"sync"
 
 	"github.com/JrMarcco/easy-kit/pool"
 	"github.com/JrMarcco/kuryr/internal/domain"
 	"github.com/JrMarcco/kuryr/internal/repository"
 	"github.com/JrMarcco/kuryr/internal/service/ports"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
 var _ ports.NotificationSender = (*DefaultSender)(nil)
@@ -18,7 +21,7 @@ type DefaultSender struct {
 
 	channelSender ports.ChannelSender
 
-	taskPool *pool.TaskPool
+	taskPool pool.TaskPool
 
 	logger *zap.Logger
 }
@@ -49,6 +52,7 @@ func (s *DefaultSender) Send(ctx context.Context, n domain.Notification) (domain
 		return domain.SendResp{}, err
 	}
 
+	// 写入 callback log 记录。
 	callbackLog := domain.CallbackLog{
 		Notification: domain.Notification{
 			Id:         n.Id,
@@ -72,14 +76,79 @@ func (s *DefaultSender) Send(ctx context.Context, n domain.Notification) (domain
 }
 
 func (s *DefaultSender) BatchSend(ctx context.Context, ns []domain.Notification) (domain.BatchSendResp, error) {
-	return domain.BatchSendResp{}, nil
+	if len(ns) == 0 {
+		return domain.BatchSendResp{}, nil
+	}
+
+	var successMu, failureMu sync.Mutex
+	var successResults, failureResults []domain.SendResult
+
+	var eg errgroup.Group
+	for i := range ns {
+		n := ns[i]
+
+		eg.Go(func() error {
+			err := s.taskPool.Submit(ctx, pool.TaskFunc(func(ctx context.Context) error {
+				_, err := s.channelSender.Send(ctx, n)
+				if err != nil {
+					res := domain.SendResult{
+						NotificationId: n.Id,
+						SendStatus:     domain.SendStatusFailure,
+					}
+
+					failureMu.Lock()
+					failureResults = append(failureResults, res)
+					failureMu.Unlock()
+
+					return nil
+				}
+
+				res := domain.SendResult{
+					NotificationId: n.Id,
+					SendStatus:     domain.SendStatusSuccess,
+				}
+
+				successMu.Lock()
+				successResults = append(successResults, res)
+				successMu.Unlock()
+
+				return nil
+			}))
+
+			if err != nil {
+				s.logger.Warn("failed to submit task to task pool", zap.Error(err), zap.String("notification_id", n.Id))
+			}
+			return err
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		s.logger.Warn("failed to send notifications", zap.Error(err))
+		return domain.BatchSendResp{}, fmt.Errorf("[kuryr] failed to send notifications: %w", err)
+	}
+
+	allId := make([]string, 0, len(successResults)+len(failureResults))
+	for _, res := range successResults {
+		allId = append(allId, res.NotificationId)
+	}
+
+	for _, res := range failureResults {
+		allId = append(allId, res.NotificationId)
+	}
+
+	// TODO: 写入 callback log 记录
+
+	// 合并结果并返回。
+	return domain.BatchSendResp{
+		Results: append(successResults, failureResults...),
+	}, nil
 }
 
 func NewDefaultSender(
 	callbackLogRepo repository.CallbackLogRepo,
 	notificationRepo repository.NotificationRepo,
 	channelSender ports.ChannelSender,
-	taskPool *pool.TaskPool,
+	taskPool pool.TaskPool,
 	logger *zap.Logger,
 ) *DefaultSender {
 	return &DefaultSender{
