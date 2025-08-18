@@ -11,7 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-var RepoFxOpt = fx.Options(
+var RepoFxOpt = fx.Module(
+	"repository",
 	// dao
 	fx.Provide(
 		// biz info dao

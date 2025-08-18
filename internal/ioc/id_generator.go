@@ -6,9 +6,12 @@ import (
 	"go.uber.org/fx"
 )
 
-var IdGeneratorFxOpt = fx.Provide(
-	fx.Annotate(
-		snowflake.NewGenerator,
-		fx.As(new(idgen.Generator)),
+var IdGeneratorFxOpt = fx.Module(
+	"id-generator",
+	fx.Provide(
+		fx.Annotate(
+			snowflake.NewGenerator,
+			fx.As(new(idgen.Generator)),
+		),
 	),
 )

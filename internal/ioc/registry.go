@@ -8,10 +8,13 @@ import (
 	"go.uber.org/fx"
 )
 
-var RegistryFxOpt = fx.Provide(
-	fx.Annotate(
-		InitRegistry,
-		fx.As(new(registry.Registry)),
+var RegistryFxOpt = fx.Module(
+	"registry",
+	fx.Provide(
+		fx.Annotate(
+			InitRegistry,
+			fx.As(new(registry.Registry)),
+		),
 	),
 )
 

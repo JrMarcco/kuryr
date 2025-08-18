@@ -13,10 +13,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-var (
-	AppFxOpt    = fx.Provide(InitApp)
-	AppFxInvoke = fx.Invoke(AppLifecycle)
-)
+var AppFxOpt = fx.Module("app", fx.Invoke(InitApp))
 
 // App 应用整体的封装，组合了 grpc.Server
 type App struct {
@@ -79,7 +76,7 @@ func (app *App) Stop() error {
 }
 
 // InitApp 初始化 app
-func InitApp(grpcServer *grpc.Server, r registry.Registry, logger *zap.Logger) *App {
+func InitApp(lc fx.Lifecycle, grpcServer *grpc.Server, r registry.Registry, logger *zap.Logger) *App {
 	type config struct {
 		Name        string `mapstructure:"name"`
 		Addr        string `mapstructure:"addr"`
@@ -102,17 +99,14 @@ func InitApp(grpcServer *grpc.Server, r registry.Registry, logger *zap.Logger) *
 		WriteWeight: uint32(cfg.WriteWeight),
 	}
 
-	return &App{
+	app := &App{
 		Server:          grpcServer,
 		timeout:         time.Duration(cfg.Timeout) * time.Millisecond,
 		registry:        r,
 		serviceInstance: si,
 		logger:          logger,
 	}
-}
 
-// AppLifecycle app 生命周期 hook
-func AppLifecycle(lc fx.Lifecycle, app *App) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			return app.Start()
@@ -121,4 +115,6 @@ func AppLifecycle(lc fx.Lifecycle, app *App) {
 			return app.Stop()
 		},
 	})
+
+	return app
 }

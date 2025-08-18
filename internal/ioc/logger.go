@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var LoggerFxOpt = fx.Provide(InitLogger)
+var LoggerFxOpt = fx.Module("logger", fx.Provide(InitLogger))
 
 func InitLogger(lc fx.Lifecycle) *zap.Logger {
 	type config struct {

@@ -8,9 +8,12 @@ import (
 	"go.uber.org/fx"
 )
 
-var RedisFxOpt = fx.Provide(
-	InitRedis,
-	InitDClient,
+var RedisFxOpt = fx.Module(
+	"redis",
+	fx.Provide(
+		InitRedis,
+		InitDClient,
+	),
 )
 
 func InitRedis() redis.Cmdable {

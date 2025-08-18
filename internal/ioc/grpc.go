@@ -20,12 +20,15 @@ import (
 	"google.golang.org/grpc/keepalive"
 )
 
-var GrpcFxOpt = fx.Provide(
-	InitGrpc,
-	InitCallbackGrpcClients,
-	api.NewBizConfigServer,
-	api.NewProviderServer,
-	api.NewNotificationServer,
+var GrpcFxOpt = fx.Module(
+	"grpc",
+	fx.Provide(
+		InitGrpc,
+		InitCallbackGrpcClients,
+		api.NewBizConfigServer,
+		api.NewProviderServer,
+		api.NewNotificationServer,
+	),
 )
 
 func InitGrpc(

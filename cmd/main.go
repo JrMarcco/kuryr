@@ -27,6 +27,8 @@ func main() {
 		ioc.RedisFxOpt,
 		// 初始化 db
 		ioc.DBFxOpt,
+		// 初始化 MongoDB
+		ioc.MongoFxOpt,
 		// 初始化 etcd
 		ioc.EtcdFxOpt,
 		// 初始化 grpc registry
@@ -37,11 +39,9 @@ func main() {
 		ioc.ServiceFxOpt,
 		// 初始化 grpc
 		ioc.GrpcFxOpt,
+
 		// 初始化 ioc.App
 		ioc.AppFxOpt,
-
-		// 注册 app lifecycle
-		ioc.AppFxInvoke,
 	).Run()
 }
 

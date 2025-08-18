@@ -15,13 +15,16 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-var DBFxOpt = fx.Provide(
-	InitBaseDB,
-	InitShardingDB,
-	fx.Annotate(
-		InitCallbackLogSharding,
-		fx.As(new(sharding.Strategy)),
-		fx.ResultTags(`name:"cbl_sharding_strategy"`),
+var DBFxOpt = fx.Module(
+	"db",
+	fx.Provide(
+		InitBaseDB,
+		InitShardingDB,
+		fx.Annotate(
+			InitCallbackLogSharding,
+			fx.As(new(sharding.Strategy)),
+			fx.ResultTags(`name:"cbl_sharding_strategy"`),
+		),
 	),
 )
 

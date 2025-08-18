@@ -8,7 +8,8 @@ import (
 	"go.uber.org/fx"
 )
 
-var ServiceFxOpt = fx.Options(
+var ServiceFxOpt = fx.Module(
+	"service",
 	fx.Provide(
 		// biz info service
 		fx.Annotate(

@@ -8,7 +8,7 @@ import (
 	"go.uber.org/fx"
 )
 
-var GoCacheFxOpt = fx.Provide(InitGoCache)
+var GoCacheFxOpt = fx.Module("go-cache", fx.Provide(InitGoCache))
 
 func InitGoCache() *cache.Cache {
 	type config struct {
