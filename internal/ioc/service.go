@@ -5,6 +5,7 @@ import (
 	"github.com/JrMarcco/kuryr/internal/service/bizinfo"
 	"github.com/JrMarcco/kuryr/internal/service/callback"
 	"github.com/JrMarcco/kuryr/internal/service/provider"
+	"github.com/JrMarcco/kuryr/internal/service/sendstrategy"
 	"go.uber.org/fx"
 )
 
@@ -33,6 +34,28 @@ var ServiceFxOpt = fx.Module(
 		fx.Annotate(
 			callback.NewDefaultService,
 			fx.As(new(callback.Service)),
+		),
+
+		// default send strategy
+		fx.Annotate(
+			sendstrategy.NewDefaultSendStrategy,
+			fx.As(new(sendstrategy.SendStrategy)),
+			fx.ResultTags(`name:default_send_strategy`),
+		),
+
+		// immediate send strategy
+		fx.Annotate(
+			sendstrategy.NewImmediateSendStrategy,
+			fx.As(new(sendstrategy.SendStrategy)),
+			fx.ResultTags(`name:immediate_send_strategy`),
+		),
+
+		// send strategy dispatcher
+		fx.Annotate(
+			sendstrategy.NewDispatcher,
+			fx.As(new(sendstrategy.SendStrategy)),
+			fx.ParamTags(`name:default_send_strategy`, `name:immediate_send_strategy`),
+			fx.ResultTags(`name:send_strategy_dispatcher`),
 		),
 	),
 )

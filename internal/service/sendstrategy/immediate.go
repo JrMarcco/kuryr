@@ -2,8 +2,10 @@ package sendstrategy
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/JrMarcco/kuryr/internal/domain"
+	"github.com/JrMarcco/kuryr/internal/errs"
 	"github.com/JrMarcco/kuryr/internal/repository"
 	"github.com/JrMarcco/kuryr/internal/service/ports"
 )
@@ -18,9 +20,7 @@ type ImmediateSendStrategy struct {
 func (s *ImmediateSendStrategy) Send(ctx context.Context, n domain.Notification) (domain.SendResp, error) {
 	n.SetSendTime()
 
-	// 立即发送，设置状态为 sending
-	n.SendStatus = domain.SendStatusSending
-	created, err := s.notificationRepo.Create(ctx, n)
+	created, err := s.notificationRepo.Save(ctx, n)
 	if err != nil {
 		return domain.SendResp{}, err
 	}
@@ -28,7 +28,33 @@ func (s *ImmediateSendStrategy) Send(ctx context.Context, n domain.Notification)
 	return s.sender.Send(ctx, created)
 }
 
+// BatchSend 批量发送消息。
+// 注意：
+//
+//	消息的发送策略必须相同。
 func (s *ImmediateSendStrategy) BatchSend(ctx context.Context, ns []domain.Notification) (domain.BatchSendResp, error) {
-	// TODO: implement me
-	panic("implement me")
+	if len(ns) == 0 {
+		return domain.BatchSendResp{}, fmt.Errorf("%w: notifications cannot be empty", errs.ErrInvalidParam)
+	}
+
+	for i := range ns {
+		ns[i].SetSendTime()
+	}
+
+	created, err := s.notificationRepo.BatchSave(ctx, ns)
+	if err != nil {
+		return domain.BatchSendResp{}, fmt.Errorf("[kuryr] failed to save notifications: %w", err)
+	}
+
+	return s.sender.BatchSend(ctx, created)
+}
+
+func NewImmediateSendStrategy(
+	sender ports.NotificationSender,
+	notificationRepo repository.NotificationRepo,
+) *ImmediateSendStrategy {
+	return &ImmediateSendStrategy{
+		sender:           sender,
+		notificationRepo: notificationRepo,
+	}
 }
