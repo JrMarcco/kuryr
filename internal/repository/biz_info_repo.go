@@ -15,8 +15,9 @@ import (
 )
 
 type BizInfoRepo interface {
-	Save(ctx context.Context, bizInfo domain.BizInfo) error
-	Delete(ctx context.Context, id uint64) error
+	Save(ctx context.Context, bizInfo domain.BizInfo) (domain.BizInfo, error)
+	Update(ctx context.Context, bizInfo domain.BizInfo) (domain.BizInfo, error)
+
 	DeleteInTx(ctx context.Context, tx *gorm.DB, id uint64) error
 
 	Search(ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.BizInfo], error)
@@ -29,21 +30,25 @@ type DefaultBizInfoRepo struct {
 	dao dao.BizInfoDao
 }
 
-func (r *DefaultBizInfoRepo) Save(ctx context.Context, bizInfo domain.BizInfo) error {
-	err := r.dao.Save(ctx, r.toEntity(bizInfo))
+func (r *DefaultBizInfoRepo) Save(ctx context.Context, bizInfo domain.BizInfo) (domain.BizInfo, error) {
+	entity, err := r.dao.Save(ctx, r.toEntity(bizInfo))
 	if err != nil {
 		if pkggorm.IsUniqueConstraintError(err) {
 			if strings.Contains(err.Error(), "biz_key") {
-				return fmt.Errorf("%w: biz key [ %s ] already exists", errs.ErrInvalidParam, bizInfo.BizKey)
+				return domain.BizInfo{}, fmt.Errorf("%w: biz key [ %s ] already exists", errs.ErrInvalidParam, bizInfo.BizKey)
 			}
 		}
-		return err
+		return domain.BizInfo{}, err
 	}
-	return nil
+	return r.toDomain(entity), nil
 }
 
-func (r *DefaultBizInfoRepo) Delete(ctx context.Context, id uint64) error {
-	return r.dao.Delete(ctx, id)
+func (r *DefaultBizInfoRepo) Update(ctx context.Context, bizInfo domain.BizInfo) (domain.BizInfo, error) {
+	entity, err := r.dao.Update(ctx, r.toEntity(bizInfo))
+	if err != nil {
+		return domain.BizInfo{}, err
+	}
+	return r.toDomain(entity), nil
 }
 
 func (r *DefaultBizInfoRepo) DeleteInTx(ctx context.Context, tx *gorm.DB, id uint64) error {

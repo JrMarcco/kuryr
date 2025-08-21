@@ -1,6 +1,8 @@
 package ioc
 
 import (
+	"github.com/JrMarcco/kuryr/internal/pkg/secret"
+	"github.com/JrMarcco/kuryr/internal/pkg/secret/base64"
 	"github.com/JrMarcco/kuryr/internal/service/bizconf"
 	"github.com/JrMarcco/kuryr/internal/service/bizinfo"
 	"github.com/JrMarcco/kuryr/internal/service/callback"
@@ -12,6 +14,12 @@ import (
 var ServiceFxOpt = fx.Module(
 	"service",
 	fx.Provide(
+		// user service
+		fx.Annotate(
+			base64.NewGenerator,
+			fx.As(new(secret.Generator)),
+		),
+
 		// biz info service
 		fx.Annotate(
 			bizinfo.NewDefaultService,
@@ -40,22 +48,22 @@ var ServiceFxOpt = fx.Module(
 		fx.Annotate(
 			sendstrategy.NewDefaultSendStrategy,
 			fx.As(new(sendstrategy.SendStrategy)),
-			fx.ResultTags(`name:default_send_strategy`),
+			fx.ResultTags(`name:"default_send_strategy"`),
 		),
 
 		// immediate send strategy
 		fx.Annotate(
 			sendstrategy.NewImmediateSendStrategy,
 			fx.As(new(sendstrategy.SendStrategy)),
-			fx.ResultTags(`name:immediate_send_strategy`),
+			fx.ResultTags(`name:"immediate_send_strategy"`),
 		),
 
 		// send strategy dispatcher
 		fx.Annotate(
 			sendstrategy.NewDispatcher,
 			fx.As(new(sendstrategy.SendStrategy)),
-			fx.ParamTags(`name:default_send_strategy`, `name:immediate_send_strategy`),
-			fx.ResultTags(`name:send_strategy_dispatcher`),
+			fx.ParamTags(`name:"default_send_strategy"`, `name:"immediate_send_strategy"`),
+			fx.ResultTags(`name:"send_strategy_dispatcher"`),
 		),
 	),
 )

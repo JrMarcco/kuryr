@@ -55,7 +55,7 @@ func (n *Notification) Validate() error {
 	}
 
 	if !n.Channel.IsValid() {
-		return fmt.Errorf("%w: invalid channel: %d", errs.ErrInvalidParam, n.Channel)
+		return fmt.Errorf("%w: invalid channel [ %d ]", errs.ErrInvalidParam, n.Channel)
 	}
 
 	if n.Template.Id == 0 {

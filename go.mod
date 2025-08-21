@@ -6,7 +6,7 @@ require (
 	github.com/JrMarcco/dlock v0.0.2
 	github.com/JrMarcco/easy-grpc v0.0.13
 	github.com/JrMarcco/easy-kit v0.0.8
-	github.com/JrMarcco/kuryr-api v0.0.15
+	github.com/JrMarcco/kuryr-api v0.0.20
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/confluentinc/confluent-kafka-go/v2 v2.11.1
 	github.com/golang-jwt/jwt/v5 v5.3.0
@@ -26,7 +26,8 @@ require (
 	go.uber.org/mock v0.6.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/sync v0.16.0
-	google.golang.org/grpc v1.74.2
+	google.golang.org/grpc v1.75.0
+	google.golang.org/protobuf v1.36.7
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.1
 )
@@ -80,6 +81,5 @@ require (
 	golang.org/x/text v0.28.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
-	google.golang.org/protobuf v1.36.7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

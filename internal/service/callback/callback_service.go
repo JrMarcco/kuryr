@@ -9,9 +9,9 @@ import (
 
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/easy-kit/xsync"
-	clientv1 "github.com/JrMarcco/kuryr-api/api/client/v1"
-	commonv1 "github.com/JrMarcco/kuryr-api/api/common/v1"
-	notificationv1 "github.com/JrMarcco/kuryr-api/api/notification/v1"
+	clientv1 "github.com/JrMarcco/kuryr-api/api/go/client/v1"
+	commonv1 "github.com/JrMarcco/kuryr-api/api/go/common/v1"
+	notificationv1 "github.com/JrMarcco/kuryr-api/api/go/notification/v1"
 	"github.com/JrMarcco/kuryr/internal/domain"
 	"github.com/JrMarcco/kuryr/internal/errs"
 	"github.com/JrMarcco/kuryr/internal/pkg/retry"

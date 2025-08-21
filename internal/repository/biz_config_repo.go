@@ -15,7 +15,7 @@ import (
 )
 
 type BizConfigRepo interface {
-	Save(ctx context.Context, bizConfig domain.BizConfig) error
+	Save(ctx context.Context, bizConfig domain.BizConfig) (domain.BizConfig, error)
 
 	Delete(ctx context.Context, id uint64) error
 	DeleteInTx(ctx context.Context, tx *gorm.DB, id uint64) error
@@ -32,10 +32,10 @@ type DefaultBizConfigRepo struct {
 	logger *zap.Logger
 }
 
-func (r *DefaultBizConfigRepo) Save(ctx context.Context, bizConfig domain.BizConfig) error {
+func (r *DefaultBizConfigRepo) Save(ctx context.Context, bizConfig domain.BizConfig) (domain.BizConfig, error) {
 	entity, err := r.dao.SaveOrUpdate(ctx, r.toEntity(bizConfig))
 	if err != nil {
-		return err
+		return domain.BizConfig{}, err
 	}
 
 	d := r.toDomain(entity)
@@ -51,7 +51,7 @@ func (r *DefaultBizConfigRepo) Save(ctx context.Context, bizConfig domain.BizCon
 	if err != nil {
 		r.logger.Error("[biz config] failed to set biz config to local cache", zap.Error(err))
 	}
-	return nil
+	return d, nil
 }
 
 func (r *DefaultBizConfigRepo) Delete(ctx context.Context, id uint64) error {

@@ -11,6 +11,8 @@ CREATE TABLE biz_info (
     creator_id BIGINT NOT NULL,
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL,
+    is_deleted BOOLEAN  NOT NULL DEFAULT FALSE,
+    deleted_at BIGINT NOT NULL DEFAULT 0,
     CONSTRAINT uk_biz_key UNIQUE (biz_key)
 );
 
@@ -25,6 +27,8 @@ COMMENT ON COLUMN biz_info.contact_email IS '联系人邮箱';
 COMMENT ON COLUMN biz_info.creator_id IS '创建人 id';
 COMMENT ON COLUMN biz_info.created_at IS '创建时间戳 ( Unix 毫秒值 )';
 COMMENT ON COLUMN biz_info.updated_at IS '更新时间戳 ( Unix 毫秒值 )';
+COMMENT ON COLUMN biz_info.is_deleted IS '是否删除';
+COMMENT ON COLUMN biz_info.deleted_at IS '删除时间戳 ( Unix 毫秒值 )';
 
 -- 字段索引：业务名
 -- 查询场景：where biz_name like '%?%'
@@ -52,7 +56,8 @@ CREATE INDEX idx_biz_info_biz_name_gin ON biz_info USING gin(biz_name gin_trgm_o
 -- 业务配置信息表
 DROP TABLE IF EXISTS biz_config;
 CREATE TABLE biz_config (
-    id BIGINT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
+    biz_id BIGINT NOT NULL,
     owner_type VARCHAR(16) NOT NULL,
     channel_config JSONB NOT NULL,
     quota_config JSONB NOT NULL,
@@ -63,7 +68,8 @@ CREATE TABLE biz_config (
 );
 
 COMMENT ON TABLE biz_config IS '业务配置信息表';
-COMMENT ON COLUMN biz_config.id IS 'id ( 与 biz_info.id 保持一致 )';
+COMMENT ON COLUMN biz_config.id IS 'id';
+COMMENT ON COLUMN biz_config.biz_id IS '业务 id';
 COMMENT ON COLUMN biz_config.owner_type IS '业务类型';
 COMMENT ON COLUMN biz_config.channel_config IS '渠道配置';
 COMMENT ON COLUMN biz_config.quota_config IS '配额配置';
@@ -71,6 +77,10 @@ COMMENT ON COLUMN biz_config.callback_config IS '回调配置';
 COMMENT ON COLUMN biz_config.rate_limit IS '限流阈值 ( requests/s ) 0 表示不限制';
 COMMENT ON COLUMN biz_config.created_at IS '创建时间戳 ( Unix 毫秒值 )';
 COMMENT ON COLUMN biz_config.updated_at IS '更新时间戳 ( Unix 毫秒值 )';
+
+-- 字段索引：业务 id
+-- 查询场景：where biz_id = ?
+CREATE INDEX idx_biz_config_biz_id ON biz_config(biz_id);
 
 -- 供应商信息表
 DROP TABLE IF EXISTS provider_info;

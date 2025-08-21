@@ -22,15 +22,15 @@ type DefaultSendStrategy struct {
 func (s *DefaultSendStrategy) Send(ctx context.Context, n domain.Notification) (domain.SendResp, error) {
 	n.SetSendTime()
 
-	created, err := s.save(ctx, n)
+	saved, err := s.save(ctx, n)
 	if err != nil {
 		return domain.SendResp{}, fmt.Errorf("[kuryr] failed to save notification: %w", err)
 	}
 
 	return domain.SendResp{
 		Result: domain.SendResult{
-			NotificationId: created.Id,
-			SendStatus:     created.SendStatus,
+			NotificationId: saved.Id,
+			SendStatus:     saved.SendStatus,
 		},
 	}, nil
 }
@@ -47,16 +47,16 @@ func (s *DefaultSendStrategy) BatchSend(ctx context.Context, ns []domain.Notific
 		return domain.BatchSendResp{}, fmt.Errorf("%w: notifications cannot be empty", errs.ErrInvalidParam)
 	}
 
-	createdNs, err := s.batchSave(ctx, ns)
+	savedNs, err := s.batchSave(ctx, ns)
 	if err != nil {
 		return domain.BatchSendResp{}, fmt.Errorf("[kuryr] failed to save notifications: %w", err)
 	}
 
-	res := make([]domain.SendResult, 0, len(createdNs))
-	for _, n := range createdNs {
+	res := make([]domain.SendResult, 0, len(savedNs))
+	for _, saved := range savedNs {
 		res = append(res, domain.SendResult{
-			NotificationId: n.Id,
-			SendStatus:     n.SendStatus,
+			NotificationId: saved.Id,
+			SendStatus:     saved.SendStatus,
 		})
 	}
 	return domain.BatchSendResp{Results: res}, nil

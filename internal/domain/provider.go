@@ -34,7 +34,7 @@ func (p *Provider) Validate() error {
 	}
 
 	if !p.Channel.IsValid() {
-		return fmt.Errorf("%w: invalid channel: %d", errs.ErrInvalidParam, p.Channel)
+		return fmt.Errorf("%w: invalid channel [ %d ]", errs.ErrInvalidParam, p.Channel)
 	}
 
 	if p.Endpoint == "" {

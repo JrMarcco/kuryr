@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	kuryrapi "github.com/JrMarcco/kuryr-api/api"
+	kuryrapi "github.com/JrMarcco/kuryr-api/api/go"
 	"github.com/JrMarcco/kuryr/internal/errs"
 )
 

@@ -1,6 +1,11 @@
 package domain
 
-import "github.com/JrMarcco/kuryr/internal/pkg/retry"
+import (
+	"fmt"
+
+	"github.com/JrMarcco/kuryr/internal/errs"
+	"github.com/JrMarcco/kuryr/internal/pkg/retry"
+)
 
 // BizType 业务类型。
 type BizType string
@@ -29,16 +34,44 @@ func (bt BizType) IsOrganization() bool {
 
 // BizInfo 业务信息领域对象。
 type BizInfo struct {
-	Id           uint64  `json:"id"`
-	BizType      BizType `json:"biz_type"`
-	BizKey       string  `json:"biz_key"`
-	BizSecret    string  `json:"biz_secret"`
-	BizName      string  `json:"biz_name"`
-	Contact      string  `json:"contact"`
-	ContactEmail string  `json:"contact_email"`
-	CreatorId    uint64  `json:"creator_id"`
-	CreatedAt    int64   `json:"created_at"`
-	UpdatedAt    int64   `json:"updated_at"`
+	Id     uint64 `json:"id"`
+	BizKey string `json:"biz_key"`
+
+	BizName   string  `json:"biz_name"`
+	BizType   BizType `json:"biz_type"`
+	BizSecret string  `json:"biz_secret"`
+
+	Contact      string `json:"contact"`
+	ContactEmail string `json:"contact_email"`
+
+	CreatorId uint64 `json:"creator_id"`
+
+	CreatedAt int64 `json:"created_at"`
+	UpdatedAt int64 `json:"updated_at"`
+}
+
+func (bi *BizInfo) Validate() error {
+	if bi.BizKey == "" {
+		return fmt.Errorf("%w: biz key cannot be empty", errs.ErrInvalidParam)
+	}
+
+	if bi.BizName == "" {
+		return fmt.Errorf("%w: biz name cannot be empty", errs.ErrInvalidParam)
+	}
+
+	if !bi.BizType.IsValid() {
+		return fmt.Errorf("%w: invalid biz type [ %s ]", errs.ErrInvalidParam, bi.BizType)
+	}
+
+	if bi.Contact == "" {
+		return fmt.Errorf("%w: contact cannot be empty", errs.ErrInvalidParam)
+	}
+
+	if bi.ContactEmail == "" {
+		return fmt.Errorf("%w: contact email cannot be empty", errs.ErrInvalidParam)
+	}
+
+	return nil
 }
 
 // OwnerType 拥有者类型
@@ -60,6 +93,7 @@ func (s OwnerType) IsValid() bool {
 // BizConfig 业务方配置领域对象。
 type BizConfig struct {
 	Id             uint64          `json:"id"`
+	BizId          uint64          `json:"biz_id"`
 	OwnerType      OwnerType       `json:"owner_type"`
 	ChannelConfig  *ChannelConfig  `json:"channel_config"` // 渠道配置
 	QuotaConfig    *QuotaConfig    `json:"quota_config"`   // 配额配置

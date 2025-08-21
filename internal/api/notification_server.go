@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 
-	notificationv1 "github.com/JrMarcco/kuryr-api/api/notification/v1"
+	notificationv1 "github.com/JrMarcco/kuryr-api/api/go/notification/v1"
 )
 
 var _ notificationv1.NotificationServiceServer = (*NotificationServer)(nil)

@@ -12,6 +12,7 @@ import (
 
 type BizConfig struct {
 	Id             uint64                                   `gorm:"column:id"`
+	BizId          uint64                                   `gorm:"column:biz_id"`
 	OwnerType      string                                   `gorm:"column:owner_type"`
 	ChannelConfig  pkgsql.JsonColumn[domain.ChannelConfig]  `gorm:"column:channel_config;type:JSON"`
 	QuotaConfig    pkgsql.JsonColumn[domain.QuotaConfig]    `gorm:"column:quota_config;type:JSON"`

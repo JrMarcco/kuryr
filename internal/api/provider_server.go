@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/JrMarcco/easy-kit/slice"
-	commonv1 "github.com/JrMarcco/kuryr-api/api/common/v1"
-	providerv1 "github.com/JrMarcco/kuryr-api/api/provider/v1"
+	commonv1 "github.com/JrMarcco/kuryr-api/api/go/common/v1"
+	providerv1 "github.com/JrMarcco/kuryr-api/api/go/provider/v1"
 	"github.com/JrMarcco/kuryr/internal/domain"
 	"github.com/JrMarcco/kuryr/internal/service/provider"
 )
@@ -18,86 +18,81 @@ type ProviderServer struct {
 }
 
 func (s *ProviderServer) Save(ctx context.Context, request *providerv1.SaveRequest) (*providerv1.SaveResponse, error) {
-	if request == nil || request.Provider == nil {
-		return &providerv1.SaveResponse{
-			Success: false,
-			ErrMsg:  "[kuryr] invalid request, provider is nil",
-		}, nil
-	}
+	// if request == nil || request.Provider == nil {
+	// 	return &providerv1.SaveResponse{
+	// 		Success: false,
+	// 		ErrMsg:  "[kuryr] invalid request, provider is nil",
+	// 	}, nil
+	// }
 
-	p, err := s.pbToDomain(request.Provider)
-	if err != nil {
-		return &providerv1.SaveResponse{
-			Success: false,
-			ErrMsg:  err.Error(),
-		}, err
-	}
+	// p, err := s.pbToDomain(request.Provider)
+	// if err != nil {
+	// 	return &providerv1.SaveResponse{}, err
+	// }
 
-	if err = s.svc.Save(ctx, p); err != nil {
-		return &providerv1.SaveResponse{
-			Success: false,
-			ErrMsg:  err.Error(),
-		}, err
-	}
-	return &providerv1.SaveResponse{Success: true}, nil
+	// if err = s.svc.Save(ctx, p); err != nil {
+	// 	return &providerv1.SaveResponse{}, err
+	// }
+	// return &providerv1.SaveResponse{Success: true}, nil
+	// TODO: implement me
+	panic("implement me")
 }
 
 func (s *ProviderServer) Delete(ctx context.Context, request *providerv1.DeleteRequest) (*providerv1.DeleteResponse, error) {
-	//TODO implement me
+	// TODO: implement me
 	panic("implement me")
 }
 
 func (s *ProviderServer) Update(ctx context.Context, request *providerv1.UpdateRequest) (*providerv1.UpdateResponse, error) {
-	if request == nil || request.Provider == nil || request.Provider.Id == 0 {
-		return &providerv1.UpdateResponse{
-			Success: false,
-			ErrMsg:  "[kuryr] invalid request, provider is nil or provider id is invalid",
-		}, nil
-	}
+	// if request == nil || request.Provider == nil || request.Provider.Id == 0 {
+	// 	return &providerv1.UpdateResponse{
+	// 		Success: false,
+	// 		ErrMsg:  "[kuryr] invalid request, provider is nil or provider id is invalid",
+	// 	}, nil
+	// }
 
-	p, err := s.pbToDomain(request.Provider)
-	if err != nil {
-		return &providerv1.UpdateResponse{
-			Success: false,
-			ErrMsg:  err.Error(),
-		}, err
-	}
+	// p, err := s.pbToDomain(request.Provider)
+	// if err != nil {
+	// 	return &providerv1.UpdateResponse{}, err
+	// }
 
-	if err = s.svc.Update(ctx, p); err != nil {
-		return &providerv1.UpdateResponse{
-			Success: false,
-			ErrMsg:  err.Error(),
-		}, err
-	}
-	return &providerv1.UpdateResponse{Success: true}, nil
+	// if err = s.svc.Update(ctx, p); err != nil {
+	// 	return &providerv1.UpdateResponse{
+	// 		Success: false,
+	// 		ErrMsg:  err.Error(),
+	// 	}, err
+	// }
+	// return &providerv1.UpdateResponse{Success: true}, nil
+	// TODO: implement me
+	panic("implement me")
 }
 
-func (s *ProviderServer) pbToDomain(pb *providerv1.Provider) (domain.Provider, error) {
-	p := domain.Provider{
-		Id:               pb.Id,
-		ProviderName:     pb.ProviderName,
-		Endpoint:         pb.Endpoint,
-		RegionId:         pb.RegionId,
-		AppId:            pb.AppId,
-		ApiKey:           pb.ApiKey,
-		ApiSecret:        pb.ApiSecret,
-		Weight:           pb.Weight,
-		QpsLimit:         pb.QpsLimit,
-		DailyLimit:       pb.DailyLimit,
-		AuditCallbackUrl: pb.AuditCallbackUrl,
-		ActiveStatus:     domain.ActiveStatus(pb.ActiveStatus),
-	}
+// func (s *ProviderServer) pbToDomain(pb *providerv1.Provider) (domain.Provider, error) {
+// 	p := domain.Provider{
+// 		Id:               pb.Id,
+// 		ProviderName:     pb.ProviderName,
+// 		Endpoint:         pb.Endpoint,
+// 		RegionId:         pb.RegionId,
+// 		AppId:            pb.AppId,
+// 		ApiKey:           pb.ApiKey,
+// 		ApiSecret:        pb.ApiSecret,
+// 		Weight:           pb.Weight,
+// 		QpsLimit:         pb.QpsLimit,
+// 		DailyLimit:       pb.DailyLimit,
+// 		AuditCallbackUrl: pb.AuditCallbackUrl,
+// 		ActiveStatus:     domain.ActiveStatus(pb.ActiveStatus),
+// 	}
 
-	switch pb.Channel {
-	case commonv1.Channel_SMS:
-		p.Channel = domain.ChannelSms
-	case commonv1.Channel_EMAIL:
-		p.Channel = domain.ChannelEmail
-	default:
-		return domain.Provider{}, fmt.Errorf("[kuryr] invalid channel: %s", pb.Channel.String())
-	}
-	return p, nil
-}
+// 	switch pb.Channel {
+// 	case commonv1.Channel_SMS:
+// 		p.Channel = domain.ChannelSms
+// 	case commonv1.Channel_EMAIL:
+// 		p.Channel = domain.ChannelEmail
+// 	default:
+// 		return domain.Provider{}, fmt.Errorf("[kuryr] invalid channel: %s", pb.Channel.String())
+// 	}
+// 	return p, nil
+// }
 
 func (s *ProviderServer) List(ctx context.Context, request *providerv1.ListRequest) (*providerv1.ListResponse, error) {
 	if request == nil {

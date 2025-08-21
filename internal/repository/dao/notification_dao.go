@@ -29,8 +29,6 @@ type NotificationDao interface{}
 
 type DefaultNotificationDao struct {
 	client *mongo.Client
-
-	database string
 }
 
 func NewDefaultNotificationDao(client *mongo.Client) *DefaultNotificationDao {

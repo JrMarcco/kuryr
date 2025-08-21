@@ -20,12 +20,12 @@ type ImmediateSendStrategy struct {
 func (s *ImmediateSendStrategy) Send(ctx context.Context, n domain.Notification) (domain.SendResp, error) {
 	n.SetSendTime()
 
-	created, err := s.notificationRepo.Save(ctx, n)
+	saved, err := s.notificationRepo.Save(ctx, n)
 	if err != nil {
 		return domain.SendResp{}, err
 	}
 
-	return s.sender.Send(ctx, created)
+	return s.sender.Send(ctx, saved)
 }
 
 // BatchSend 批量发送消息。
@@ -41,12 +41,12 @@ func (s *ImmediateSendStrategy) BatchSend(ctx context.Context, ns []domain.Notif
 		ns[i].SetSendTime()
 	}
 
-	created, err := s.notificationRepo.BatchSave(ctx, ns)
+	saved, err := s.notificationRepo.BatchSave(ctx, ns)
 	if err != nil {
 		return domain.BatchSendResp{}, fmt.Errorf("[kuryr] failed to save notifications: %w", err)
 	}
 
-	return s.sender.BatchSend(ctx, created)
+	return s.sender.BatchSend(ctx, saved)
 }
 
 func NewImmediateSendStrategy(

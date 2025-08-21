@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/JrMarcco/easy-kit/slice"
-	commonv1 "github.com/JrMarcco/kuryr-api/api/common/v1"
-	configv1 "github.com/JrMarcco/kuryr-api/api/config/v1"
+	commonv1 "github.com/JrMarcco/kuryr-api/api/go/common/v1"
+	configv1 "github.com/JrMarcco/kuryr-api/api/go/config/v1"
 	"github.com/JrMarcco/kuryr/internal/domain"
 	"github.com/JrMarcco/kuryr/internal/errs"
 	"github.com/JrMarcco/kuryr/internal/pkg/retry"
@@ -22,40 +22,34 @@ type BizConfigServer struct {
 }
 
 func (s *BizConfigServer) Save(ctx context.Context, request *configv1.SaveRequest) (*configv1.SaveResponse, error) {
-	if request == nil || request.Config == nil {
-		return &configv1.SaveResponse{
-			Success: false,
-			ErrMsg:  "[kuryr] biz config request is invalid, config is nil",
-		}, nil
+	if request == nil || request.BizId == 0 {
+		return &configv1.SaveResponse{}, fmt.Errorf("%w: request is nil or biz id is invalid", errs.ErrInvalidParam)
 	}
 
-	bizConfig := s.pbToDomain(request.Config)
-
-	err := s.svc.Save(ctx, bizConfig)
+	bizConfig := s.saveReqToDomain(request)
+	saved, err := s.svc.Save(ctx, bizConfig)
 	if err != nil {
-		return &configv1.SaveResponse{
-			Success: false,
-			ErrMsg:  err.Error(),
-		}, err
+		return &configv1.SaveResponse{}, err
 	}
 
-	return &configv1.SaveResponse{Success: true}, nil
+	return &configv1.SaveResponse{
+		BizConfig: s.domainToPb(saved),
+	}, nil
 }
 
-// pbToDomain convert protobuf to domain
-func (s *BizConfigServer) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {
+// saveReqToDomain convert save request protobuf to domain
+func (s *BizConfigServer) saveReqToDomain(req *configv1.SaveRequest) domain.BizConfig {
 	bizConfig := domain.BizConfig{
-		Id:        pb.BizId,
-		OwnerType: domain.OwnerType(pb.OwnerType),
-		RateLimit: pb.RateLimit,
+		Id:        req.BizId,
+		RateLimit: req.RateLimit,
 	}
 
-	if pb.ChannelConfig != nil {
+	if req.ChannelConfig != nil {
 		channelConfig := &domain.ChannelConfig{
-			Channels: make([]domain.ChannelItem, len(pb.ChannelConfig.Items)),
+			Channels: make([]domain.ChannelItem, len(req.ChannelConfig.Items)),
 		}
 
-		for index, item := range pb.ChannelConfig.Items {
+		for index, item := range req.ChannelConfig.Items {
 			channelConfig.Channels[index] = domain.ChannelItem{
 				Channel:  domain.Channel(item.Channel),
 				Priority: item.Priority,
@@ -63,24 +57,24 @@ func (s *BizConfigServer) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {
 			}
 		}
 
-		if pb.ChannelConfig.RetryPolicy != nil {
-			retryPolicyConfig := s.convertRetry(pb.ChannelConfig.RetryPolicy)
+		if req.ChannelConfig.RetryPolicy != nil {
+			retryPolicyConfig := s.convertRetry(req.ChannelConfig.RetryPolicy)
 			channelConfig.RetryPolicyConfig = retryPolicyConfig
 		}
 		bizConfig.ChannelConfig = channelConfig
 	}
 
-	if pb.QuotaConfig != nil {
+	if req.QuotaConfig != nil {
 		quotaConfig := &domain.QuotaConfig{}
-		if pb.QuotaConfig.Daily != nil {
-			dailyQuota := pb.QuotaConfig.Daily
+		if req.QuotaConfig.Daily != nil {
+			dailyQuota := req.QuotaConfig.Daily
 			quotaConfig.Daily = &domain.Quota{
 				Sms:   dailyQuota.Sms,
 				Email: dailyQuota.Email,
 			}
 		}
-		if pb.QuotaConfig.Monthly != nil {
-			monthlyQuota := pb.QuotaConfig.Monthly
+		if req.QuotaConfig.Monthly != nil {
+			monthlyQuota := req.QuotaConfig.Monthly
 			quotaConfig.Monthly = &domain.Quota{
 				Sms:   monthlyQuota.Sms,
 				Email: monthlyQuota.Email,
@@ -89,13 +83,13 @@ func (s *BizConfigServer) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {
 		bizConfig.QuotaConfig = quotaConfig
 	}
 
-	if pb.CallbackConfig != nil {
+	if req.CallbackConfig != nil {
 		callbackConfig := &domain.CallbackConfig{
-			ServiceName: pb.CallbackConfig.ServiceName,
+			ServiceName: req.CallbackConfig.ServiceName,
 		}
 
-		if pb.CallbackConfig.RetryPolicy != nil {
-			retryPolicyConfig := s.convertRetry(pb.CallbackConfig.RetryPolicy)
+		if req.CallbackConfig.RetryPolicy != nil {
+			retryPolicyConfig := s.convertRetry(req.CallbackConfig.RetryPolicy)
 			callbackConfig.RetryPolicyConfig = retryPolicyConfig
 		}
 		bizConfig.CallbackConfig = callbackConfig
@@ -116,37 +110,32 @@ func (s *BizConfigServer) convertRetry(pbRetry *configv1.RetryPolicyConfig) *ret
 
 func (s *BizConfigServer) Delete(ctx context.Context, request *configv1.DeleteRequest) (*configv1.DeleteResponse, error) {
 	if request.Id == 0 {
-		return &configv1.DeleteResponse{
-			Success: false,
-			ErrMsg:  "[kuryr] biz id is invalid",
-		}, nil
+		return &configv1.DeleteResponse{}, fmt.Errorf("%w: biz id is invalid", errs.ErrInvalidParam)
 	}
 
 	err := s.svc.Delete(ctx, request.Id)
 	if err != nil {
-		return &configv1.DeleteResponse{
-			Success: false,
-			ErrMsg:  err.Error(),
-		}, err
+		return &configv1.DeleteResponse{}, err
 	}
-	return &configv1.DeleteResponse{Success: true}, nil
+	return &configv1.DeleteResponse{}, nil
 }
 
 func (s *BizConfigServer) FindById(ctx context.Context, req *configv1.FindByIdRequest) (*configv1.FindByIdResponse, error) {
 	if req.Id == 0 {
-		return &configv1.FindByIdResponse{}, fmt.Errorf("[kuryr] biz id is invalid: %d", req.Id)
+		return &configv1.FindByIdResponse{}, fmt.Errorf("%w: biz id is invalid", errs.ErrInvalidParam)
 	}
 
 	bizConfig, err := s.svc.FindById(ctx, req.Id)
 	if err != nil {
 		if errors.Is(err, errs.ErrRecordNotFound) {
-			return &configv1.FindByIdResponse{
-				ErrCode: commonv1.ErrCode_BIZ_CONFIG_NOT_FOUND,
-			}, nil
+			// TODO: deal with record not found
+			return &configv1.FindByIdResponse{}, nil
 		}
-		return &configv1.FindByIdResponse{}, fmt.Errorf("%w: failed to get biz config by id", err)
+		return &configv1.FindByIdResponse{}, err
 	}
-	return &configv1.FindByIdResponse{Config: s.domainToPb(bizConfig)}, nil
+	return &configv1.FindByIdResponse{
+		Config: s.domainToPb(bizConfig),
+	}, nil
 }
 
 func (s *BizConfigServer) domainToPb(bizConfig domain.BizConfig) *configv1.BizConfig {
