@@ -7,6 +7,7 @@ import (
 	"github.com/JrMarcco/easy-grpc/client/br"
 	"github.com/JrMarcco/easy-grpc/client/rr"
 	"github.com/JrMarcco/easy-grpc/registry"
+	businessv1 "github.com/JrMarcco/kuryr-api/api/go/business/v1"
 	clientv1 "github.com/JrMarcco/kuryr-api/api/go/client/v1"
 	configv1 "github.com/JrMarcco/kuryr-api/api/go/config/v1"
 	notificationv1 "github.com/JrMarcco/kuryr-api/api/go/notification/v1"
@@ -33,12 +34,14 @@ var GrpcFxOpt = fx.Module(
 )
 
 func InitGrpc(
+	bizInfoServer *api.BizInfoServer,
 	bizConfigServer *api.BizConfigServer,
 	providerServer *api.ProviderServer,
 	notificationServer *api.NotificationServer,
 ) *grpc.Server {
 	grpcServer := grpc.NewServer()
 
+	businessv1.RegisterBusinessServiceServer(grpcServer, bizInfoServer)
 	configv1.RegisterBizConfigServiceServer(grpcServer, bizConfigServer)
 	providerv1.RegisterProviderServiceServer(grpcServer, providerServer)
 	notificationv1.RegisterNotificationServiceServer(grpcServer, notificationServer)
@@ -75,7 +78,7 @@ func InitCallbackGrpcClients(r registry.Registry) *client.Manager[clientv1.Callb
 	// 注册负载均衡
 	balancer.Register(bb)
 
-	return client.NewManagerBuilder[clientv1.CallbackServiceClient](
+	return client.NewManagerBuilder(
 		rr.NewResolverBuilder(r, time.Duration(cfg.Timeout)*time.Millisecond),
 		bb,
 		func(conn *grpc.ClientConn) clientv1.CallbackServiceClient {

@@ -11,6 +11,8 @@ import (
 	pkggorm "github.com/JrMarcco/kuryr/internal/pkg/gorm"
 	"github.com/JrMarcco/kuryr/internal/search"
 	"github.com/JrMarcco/kuryr/internal/service/bizinfo"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
@@ -22,7 +24,7 @@ type BizInfoServer struct {
 
 func (s *BizInfoServer) Save(ctx context.Context, request *businessv1.SaveRequest) (*businessv1.SaveResponse, error) {
 	if request == nil || request.BusinessInfo == nil {
-		return &businessv1.SaveResponse{}, fmt.Errorf("%w: request is nil or business info is nil", errs.ErrInvalidParam)
+		return &businessv1.SaveResponse{}, status.Errorf(codes.InvalidArgument, "request is nil or business info is nil")
 	}
 
 	bizInfo := domain.BizInfo{
@@ -35,12 +37,12 @@ func (s *BizInfoServer) Save(ctx context.Context, request *businessv1.SaveReques
 	}
 
 	if err := bizInfo.Validate(); err != nil {
-		return &businessv1.SaveResponse{}, err
+		return &businessv1.SaveResponse{}, status.Errorf(codes.InvalidArgument, "invalid biz info: %v", err)
 	}
 
 	saved, err := s.svc.Save(ctx, bizInfo)
 	if err != nil {
-		return &businessv1.SaveResponse{}, fmt.Errorf("[kuryr] failed to save biz info: %w", err)
+		return &businessv1.SaveResponse{}, status.Errorf(codes.Internal, "failed to save biz info: %v", err)
 	}
 
 	return &businessv1.SaveResponse{
@@ -50,12 +52,12 @@ func (s *BizInfoServer) Save(ctx context.Context, request *businessv1.SaveReques
 
 func (s *BizInfoServer) Delete(ctx context.Context, request *businessv1.DeleteRequest) (*businessv1.DeleteResponse, error) {
 	if request == nil || request.BizId == 0 {
-		return &businessv1.DeleteResponse{}, fmt.Errorf("%w: request is nil or biz id is invalid", errs.ErrInvalidParam)
+		return &businessv1.DeleteResponse{}, status.Errorf(codes.InvalidArgument, "request is nil or biz id is invalid")
 	}
 
 	err := s.svc.Delete(ctx, request.BizId)
 	if err != nil {
-		return &businessv1.DeleteResponse{}, fmt.Errorf("[kuryr] failed to delete biz info: %w", err)
+		return &businessv1.DeleteResponse{}, status.Errorf(codes.Internal, "failed to delete biz info: %v", err)
 	}
 
 	return &businessv1.DeleteResponse{}, nil
@@ -63,17 +65,17 @@ func (s *BizInfoServer) Delete(ctx context.Context, request *businessv1.DeleteRe
 
 func (s BizInfoServer) Update(ctx context.Context, request *businessv1.UpdateRequest) (*businessv1.UpdateResponse, error) {
 	if request == nil || request.BusinessInfo == nil {
-		return &businessv1.UpdateResponse{}, fmt.Errorf("%w: request is nil or business info is nil", errs.ErrInvalidParam)
+		return &businessv1.UpdateResponse{}, status.Errorf(codes.InvalidArgument, "request is nil or business info is nil")
 	}
 
 	bizInfo, err := s.applyMaskToDomain(request.BusinessInfo, request.FieldMask)
 	if err != nil {
-		return &businessv1.UpdateResponse{}, err
+		return &businessv1.UpdateResponse{}, status.Errorf(codes.InvalidArgument, "invalid biz info: %v", err)
 	}
 
 	updated, err := s.svc.Update(ctx, bizInfo)
 	if err != nil {
-		return &businessv1.UpdateResponse{}, err
+		return &businessv1.UpdateResponse{}, status.Errorf(codes.Internal, "failed to update biz info: %v", err)
 	}
 
 	return &businessv1.UpdateResponse{
@@ -83,7 +85,7 @@ func (s BizInfoServer) Update(ctx context.Context, request *businessv1.UpdateReq
 
 func (s *BizInfoServer) applyMaskToDomain(pb *businessv1.BusinessInfo, mask *fieldmaskpb.FieldMask) (domain.BizInfo, error) {
 	if mask == nil || len(mask.Paths) == 0 {
-		return domain.BizInfo{}, fmt.Errorf("%w: field mask is nil or paths is empty", errs.ErrInvalidParam)
+		return domain.BizInfo{}, status.Errorf(codes.InvalidArgument, "field mask is nil or paths is empty")
 	}
 
 	bizInfo := domain.BizInfo{
@@ -110,7 +112,7 @@ func (s *BizInfoServer) applyMaskToDomain(pb *businessv1.BusinessInfo, mask *fie
 
 func (s *BizInfoServer) Search(ctx context.Context, request *businessv1.SearchRequest) (*businessv1.SearchResponse, error) {
 	if request == nil {
-		return &businessv1.SearchResponse{}, fmt.Errorf("%w: request is nil", errs.ErrInvalidParam)
+		return &businessv1.SearchResponse{}, status.Errorf(codes.InvalidArgument, "request is nil")
 	}
 
 	param := &pkggorm.PaginationParam{
@@ -131,7 +133,7 @@ func (s *BizInfoServer) Search(ctx context.Context, request *businessv1.SearchRe
 
 	res, err := s.svc.Search(ctx, criteria, param)
 	if err != nil {
-		return &businessv1.SearchResponse{}, fmt.Errorf("[kuryr] failed to search biz info: %w", err)
+		return &businessv1.SearchResponse{}, status.Errorf(codes.Internal, "failed to search biz info: %v", err)
 	}
 
 	pbs := slice.Map(res.Records, func(idx int, src domain.BizInfo) *businessv1.BusinessInfo {
