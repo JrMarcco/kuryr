@@ -83,11 +83,16 @@ func (r *DefaultBizInfoRepo) FindById(ctx context.Context, id uint64) (domain.Bi
 }
 
 func (r *DefaultBizInfoRepo) toDomain(entity dao.BizInfo) domain.BizInfo {
+	secret := entity.BizSecret
+	if len(secret) > 6 {
+		secret = secret[:3] + "****" + secret[len(secret)-3:]
+	}
+
 	return domain.BizInfo{
 		Id:           entity.Id,
 		BizType:      domain.BizType(entity.BizType),
 		BizKey:       entity.BizKey,
-		BizSecret:    entity.BizSecret[:3] + "****" + entity.BizSecret[len(entity.BizSecret)-3:],
+		BizSecret:    secret,
 		BizName:      entity.BizName,
 		Contact:      entity.Contact,
 		ContactEmail: entity.ContactEmail,

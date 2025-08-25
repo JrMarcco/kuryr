@@ -7,6 +7,7 @@ import (
 	pkggorm "github.com/JrMarcco/kuryr/internal/pkg/gorm"
 	"github.com/JrMarcco/kuryr/internal/search"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type BizInfo struct {
@@ -74,10 +75,14 @@ func (d *DefaultBizInfoDao) Update(ctx context.Context, bizInfo BizInfo) (BizInf
 		values["contact_email"] = bizInfo.ContactEmail
 	}
 
+	var res BizInfo
 	err := d.db.WithContext(ctx).Model(&BizInfo{}).
+		Clauses(clause.Returning{}). // Postgresql 才支持这个语法
 		Where("id = ?", bizInfo.Id).
-		Updates(values).Error
-	return bizInfo, err
+		Updates(values).
+		Scan(&res).
+		Error
+	return res, err
 }
 
 // DeleteInTx 逻辑删除。
