@@ -33,7 +33,7 @@ func (s *DefaultSender) Send(ctx context.Context, n domain.Notification) (domain
 
 	_, err := s.channelSender.Send(ctx, n)
 	if err != nil {
-		s.logger.Error("failed to send notification", zap.Error(err))
+		s.logger.Error("[kuryr] failed to send notification", zap.Error(err))
 
 		res.SendStatus = domain.SendStatusFailure
 
@@ -67,7 +67,7 @@ func (s *DefaultSender) Send(ctx context.Context, n domain.Notification) (domain
 	err = s.callbackLogRepo.Save(ctx, callbackLog)
 	if err != nil {
 		// 回调保存失败记录日志，不影响发送结果。
-		s.logger.Error("failed to save callback log for notification [ %d ]", zap.String("notification_id", n.Id), zap.Error(err))
+		s.logger.Error("[kuryr] failed to save callback log for notification [ %d ]", zap.String("notification_id", n.Id), zap.Error(err))
 	}
 
 	return domain.SendResp{
@@ -116,14 +116,14 @@ func (s *DefaultSender) BatchSend(ctx context.Context, ns []domain.Notification)
 			}))
 
 			if err != nil {
-				s.logger.Warn("failed to submit task to task pool", zap.Error(err), zap.String("notification_id", n.Id))
+				s.logger.Warn("[kuryr] failed to submit task to task pool", zap.Error(err), zap.String("notification_id", n.Id))
 			}
 			return err
 		})
 	}
 
 	if err := eg.Wait(); err != nil {
-		s.logger.Warn("failed to send notifications", zap.Error(err))
+		s.logger.Warn("[kuryr] failed to send notifications", zap.Error(err))
 		return domain.BatchSendResp{}, fmt.Errorf("[kuryr] failed to send notifications: %w", err)
 	}
 

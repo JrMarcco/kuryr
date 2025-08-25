@@ -146,6 +146,21 @@ func (s *BizInfoServer) Search(ctx context.Context, request *businessv1.SearchRe
 	}, nil
 }
 
+func (s *BizInfoServer) FindById(ctx context.Context, request *businessv1.FindByIdRequest) (*businessv1.FindByIdResponse, error) {
+	if request == nil || request.BizId == 0 {
+		return &businessv1.FindByIdResponse{}, status.Errorf(codes.InvalidArgument, "request is nil or biz id is invalid")
+	}
+
+	bizInfo, err := s.svc.FindById(ctx, request.BizId)
+	if err != nil {
+		return &businessv1.FindByIdResponse{}, status.Errorf(codes.Internal, "failed to find biz info: %v", err)
+	}
+
+	return &businessv1.FindByIdResponse{
+		BusinessInfo: s.applyMaskToPb(bizInfo, request.FieldMask),
+	}, nil
+}
+
 func (s *BizInfoServer) applyMaskToPb(bizInfo domain.BizInfo, mask *fieldmaskpb.FieldMask) *businessv1.BusinessInfo {
 	if mask == nil || len(mask.Paths) == 0 {
 		return s.domainToPb(bizInfo)

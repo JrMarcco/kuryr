@@ -6,7 +6,7 @@ require (
 	github.com/JrMarcco/dlock v0.0.2
 	github.com/JrMarcco/easy-grpc v0.0.13
 	github.com/JrMarcco/easy-kit v0.0.8
-	github.com/JrMarcco/kuryr-api v0.0.20
+	github.com/JrMarcco/kuryr-api v0.0.23
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/confluentinc/confluent-kafka-go/v2 v2.11.1
 	github.com/golang-jwt/jwt/v5 v5.3.0
@@ -15,8 +15,8 @@ require (
 	github.com/redis/go-redis/v9 v9.12.1
 	github.com/spf13/pflag v1.0.7
 	github.com/spf13/viper v1.20.1
-	github.com/stretchr/testify v1.10.0
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.1.14
+	github.com/stretchr/testify v1.11.0
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.1.15
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.1.0
 	go.etcd.io/etcd/client/v3 v3.6.4
 	go.mongodb.org/mongo-driver/v2 v2.3.0

@@ -93,6 +93,7 @@ func (r *DefaultBizInfoRepo) toDomain(entity dao.BizInfo) domain.BizInfo {
 		ContactEmail: entity.ContactEmail,
 		CreatedAt:    entity.CreatedAt,
 		UpdatedAt:    entity.UpdatedAt,
+		CreatorId:    entity.CreatorId,
 	}
 }
 
@@ -107,6 +108,7 @@ func (r *DefaultBizInfoRepo) toEntity(bi domain.BizInfo) dao.BizInfo {
 		ContactEmail: bi.ContactEmail,
 		CreatedAt:    bi.CreatedAt,
 		UpdatedAt:    bi.UpdatedAt,
+		CreatorId:    bi.CreatorId,
 	}
 }
 
