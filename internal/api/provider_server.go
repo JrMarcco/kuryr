@@ -125,32 +125,6 @@ func (s *ProviderServer) applyMaskToDomain(pb *providerv1.Provider, mask *fieldm
 	return p, nil
 }
 
-func (s *ProviderServer) domainToPb(p domain.Provider) *providerv1.Provider {
-	pb := &providerv1.Provider{
-		Id:               p.Id,
-		ProviderName:     p.ProviderName,
-		Endpoint:         p.Endpoint,
-		RegionId:         p.RegionId,
-		AppId:            p.AppId,
-		ApiKey:           p.ApiKey,
-		ApiSecret:        p.ApiSecret,
-		Weight:           p.Weight,
-		QpsLimit:         p.QpsLimit,
-		DailyLimit:       p.DailyLimit,
-		AuditCallbackUrl: p.AuditCallbackUrl,
-		ActiveStatus:     string(p.ActiveStatus),
-	}
-
-	switch p.Channel {
-	case domain.ChannelSms:
-		pb.Channel = commonv1.Channel_SMS
-	case domain.ChannelEmail:
-		pb.Channel = commonv1.Channel_EMAIL
-	default:
-	}
-	return pb
-}
-
 func (s *ProviderServer) List(ctx context.Context, request *providerv1.ListRequest) (*providerv1.ListResponse, error) {
 	if request == nil {
 		return &providerv1.ListResponse{}, fmt.Errorf("[kuryr] invalid request, provider is nil")
@@ -180,7 +154,7 @@ func (s *ProviderServer) FindById(ctx context.Context, request *providerv1.FindB
 	}
 
 	return &providerv1.FindByIdResponse{
-		Provider: s.domainToPb(p),
+		Provider: s.applyMaskToPb(p, request.FieldMask),
 	}, nil
 }
 
@@ -195,11 +169,83 @@ func (s *ProviderServer) FindByChannel(ctx context.Context, request *providerv1.
 	}
 
 	pbs := slice.Map(providers, func(_ int, p domain.Provider) *providerv1.Provider {
-		return s.domainToPb(p)
+		return s.applyMaskToPb(p, request.FieldMask)
 	})
 	return &providerv1.FindByChannelResponse{
 		Providers: pbs,
 	}, nil
+}
+
+func (s *ProviderServer) applyMaskToPb(provider domain.Provider, mask *fieldmaskpb.FieldMask) *providerv1.Provider {
+	if mask == nil || len(mask.Paths) == 0 {
+		return s.domainToPb(provider)
+	}
+
+	pb := &providerv1.Provider{}
+
+	for _, field := range mask.Paths {
+		switch field {
+		case providerv1.FieldId:
+			pb.Id = provider.Id
+		case providerv1.FieldProviderName:
+			pb.ProviderName = provider.ProviderName
+		case providerv1.FieldChannel:
+			pb.Channel = commonv1.Channel_CHANNEL_UNSPECIFIED
+			switch provider.Channel {
+			case domain.ChannelSms:
+				pb.Channel = commonv1.Channel_SMS
+			case domain.ChannelEmail:
+				pb.Channel = commonv1.Channel_EMAIL
+			}
+		case providerv1.FieldEndpoint:
+			pb.Endpoint = provider.Endpoint
+		case providerv1.FieldRegionId:
+			pb.RegionId = provider.RegionId
+		case providerv1.FieldAppId:
+			pb.AppId = provider.AppId
+		case providerv1.FieldApiKey:
+			pb.ApiKey = provider.ApiKey
+		case providerv1.FieldApiSecret:
+			pb.ApiSecret = provider.ApiSecret
+		case providerv1.FieldWeight:
+			pb.Weight = provider.Weight
+		case providerv1.FieldQpsLimit:
+			pb.QpsLimit = provider.QpsLimit
+		case providerv1.FieldDailyLimit:
+			pb.DailyLimit = provider.DailyLimit
+		case providerv1.FieldAuditCallbackUrl:
+			pb.AuditCallbackUrl = provider.AuditCallbackUrl
+		case providerv1.FieldActiveStatus:
+			pb.ActiveStatus = string(provider.ActiveStatus)
+		}
+	}
+	return pb
+}
+
+func (s *ProviderServer) domainToPb(p domain.Provider) *providerv1.Provider {
+	channel := commonv1.Channel_CHANNEL_UNSPECIFIED
+	switch p.Channel {
+	case domain.ChannelSms:
+		channel = commonv1.Channel_SMS
+	case domain.ChannelEmail:
+		channel = commonv1.Channel_EMAIL
+	}
+
+	return &providerv1.Provider{
+		Id:               p.Id,
+		ProviderName:     p.ProviderName,
+		Channel:          channel,
+		Endpoint:         p.Endpoint,
+		RegionId:         p.RegionId,
+		AppId:            p.AppId,
+		ApiKey:           p.ApiKey,
+		ApiSecret:        p.ApiSecret,
+		Weight:           p.Weight,
+		QpsLimit:         p.QpsLimit,
+		DailyLimit:       p.DailyLimit,
+		AuditCallbackUrl: p.AuditCallbackUrl,
+		ActiveStatus:     string(p.ActiveStatus),
+	}
 }
 
 func NewProviderServer(svc provider.Service) *ProviderServer {
