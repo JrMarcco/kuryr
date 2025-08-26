@@ -13,6 +13,9 @@ import (
 	"github.com/JrMarcco/kuryr/internal/errs"
 	"github.com/JrMarcco/kuryr/internal/pkg/retry"
 	"github.com/JrMarcco/kuryr/internal/service/bizconf"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 var _ configv1.BizConfigServiceServer = (*BizConfigServer)(nil)
@@ -22,14 +25,14 @@ type BizConfigServer struct {
 }
 
 func (s *BizConfigServer) Save(ctx context.Context, request *configv1.SaveRequest) (*configv1.SaveResponse, error) {
-	if request == nil || request.BizId == 0 {
-		return &configv1.SaveResponse{}, fmt.Errorf("%w: request is nil or biz id is invalid", errs.ErrInvalidParam)
+	if request == nil || request.BizConfig == nil {
+		return &configv1.SaveResponse{}, status.Errorf(codes.InvalidArgument, "request or biz config is nil")
 	}
 
-	bizConfig := s.saveReqToDomain(request)
+	bizConfig := s.pbToDomain(request.BizConfig)
 	saved, err := s.svc.Save(ctx, bizConfig)
 	if err != nil {
-		return &configv1.SaveResponse{}, err
+		return &configv1.SaveResponse{}, status.Errorf(codes.Internal, "failed to save biz config: %v", err)
 	}
 
 	return &configv1.SaveResponse{
@@ -37,67 +40,130 @@ func (s *BizConfigServer) Save(ctx context.Context, request *configv1.SaveReques
 	}, nil
 }
 
-// saveReqToDomain convert save request protobuf to domain
-func (s *BizConfigServer) saveReqToDomain(req *configv1.SaveRequest) domain.BizConfig {
+// pbToDomain convert biz config protobuf to domain
+func (s *BizConfigServer) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {
 	bizConfig := domain.BizConfig{
-		Id:        req.BizId,
-		RateLimit: req.RateLimit,
+		Id:        pb.BizId,
+		RateLimit: pb.RateLimit,
 	}
 
-	if req.ChannelConfig != nil {
-		channelConfig := &domain.ChannelConfig{
-			Channels: make([]domain.ChannelItem, len(req.ChannelConfig.Items)),
-		}
-
-		for index, item := range req.ChannelConfig.Items {
-			channelConfig.Channels[index] = domain.ChannelItem{
-				Channel:  domain.Channel(item.Channel),
-				Priority: item.Priority,
-				Enabled:  item.Enabled,
-			}
-		}
-
-		if req.ChannelConfig.RetryPolicy != nil {
-			retryPolicyConfig := s.convertRetry(req.ChannelConfig.RetryPolicy)
-			channelConfig.RetryPolicyConfig = retryPolicyConfig
-		}
-		bizConfig.ChannelConfig = channelConfig
+	if pb.ChannelConfig != nil {
+		bizConfig.ChannelConfig = s.convertChannelConfigPb(pb.ChannelConfig)
 	}
 
-	if req.QuotaConfig != nil {
-		quotaConfig := &domain.QuotaConfig{}
-		if req.QuotaConfig.Daily != nil {
-			dailyQuota := req.QuotaConfig.Daily
-			quotaConfig.Daily = &domain.Quota{
-				Sms:   dailyQuota.Sms,
-				Email: dailyQuota.Email,
-			}
-		}
-		if req.QuotaConfig.Monthly != nil {
-			monthlyQuota := req.QuotaConfig.Monthly
-			quotaConfig.Monthly = &domain.Quota{
-				Sms:   monthlyQuota.Sms,
-				Email: monthlyQuota.Email,
-			}
-		}
-		bizConfig.QuotaConfig = quotaConfig
+	if pb.QuotaConfig != nil {
+		bizConfig.QuotaConfig = s.convertQuotaConfigPb(pb.QuotaConfig)
 	}
 
-	if req.CallbackConfig != nil {
-		callbackConfig := &domain.CallbackConfig{
-			ServiceName: req.CallbackConfig.ServiceName,
-		}
-
-		if req.CallbackConfig.RetryPolicy != nil {
-			retryPolicyConfig := s.convertRetry(req.CallbackConfig.RetryPolicy)
-			callbackConfig.RetryPolicyConfig = retryPolicyConfig
-		}
-		bizConfig.CallbackConfig = callbackConfig
+	if pb.CallbackConfig != nil {
+		bizConfig.CallbackConfig = s.convertCallbackConfigPb(pb.CallbackConfig)
 	}
 	return bizConfig
 }
 
-func (s *BizConfigServer) convertRetry(pbRetry *configv1.RetryPolicyConfig) *retry.Config {
+func (s *BizConfigServer) Update(ctx context.Context, request *configv1.UpdateRequest) (*configv1.UpdateResponse, error) {
+	if request == nil || request.BizConfig == nil {
+		return &configv1.UpdateResponse{}, status.Errorf(codes.InvalidArgument, "request or biz config is nil")
+	}
+
+	bizConfig, err := s.applyMaskToDomain(request.BizConfig, request.FieldMask)
+	if err != nil {
+		return &configv1.UpdateResponse{}, status.Errorf(codes.InvalidArgument, "invalid biz config: %v", err)
+	}
+
+	updated, err := s.svc.Update(ctx, bizConfig)
+	if err != nil {
+		return &configv1.UpdateResponse{}, status.Errorf(codes.Internal, "failed to update biz config: %v", err)
+	}
+
+	return &configv1.UpdateResponse{
+		BizConfig: s.domainToPb(updated),
+	}, nil
+}
+
+func (s *BizConfigServer) applyMaskToDomain(pb *configv1.BizConfig, mask *fieldmaskpb.FieldMask) (domain.BizConfig, error) {
+	if mask == nil || len(mask.Paths) == 0 {
+		return domain.BizConfig{}, fmt.Errorf("%w: field mask is nil or paths is empty", errs.ErrInvalidParam)
+	}
+
+	bizConfig := domain.BizConfig{
+		Id: pb.BizId,
+	}
+
+	for _, field := range mask.Paths {
+		if _, ok := configv1.UpdatableFields[field]; !ok {
+			return domain.BizConfig{}, fmt.Errorf("%w: field [ %s ] is not updatable", errs.ErrInvalidParam, field)
+		}
+
+		switch field {
+		case configv1.FieldChannelConfig:
+			bizConfig.ChannelConfig = s.convertChannelConfigPb(pb.ChannelConfig)
+		case configv1.FieldQuotaConfig:
+			bizConfig.QuotaConfig = s.convertQuotaConfigPb(pb.QuotaConfig)
+		case configv1.FieldCallbackConfig:
+			bizConfig.CallbackConfig = s.convertCallbackConfigPb(pb.CallbackConfig)
+		case configv1.FieldRateLimit:
+			bizConfig.RateLimit = pb.RateLimit
+		}
+	}
+
+	return bizConfig, nil
+}
+
+func (s *BizConfigServer) convertChannelConfigPb(pb *configv1.ChannelConfig) *domain.ChannelConfig {
+	channelConfig := &domain.ChannelConfig{
+		Channels: make([]domain.ChannelItem, len(pb.Items)),
+	}
+
+	for index, item := range pb.Items {
+		channelConfig.Channels[index] = domain.ChannelItem{
+			Channel:  domain.Channel(item.Channel),
+			Priority: item.Priority,
+			Enabled:  item.Enabled,
+		}
+	}
+
+	if pb.RetryPolicy != nil {
+		retryPolicyConfig := s.convertRetryPb(pb.RetryPolicy)
+		channelConfig.RetryPolicyConfig = retryPolicyConfig
+	}
+
+	return channelConfig
+}
+
+func (s *BizConfigServer) convertQuotaConfigPb(pb *configv1.QuotaConfig) *domain.QuotaConfig {
+	quotaConfig := &domain.QuotaConfig{}
+	if pb.Daily != nil {
+		dailyQuota := pb.Daily
+		quotaConfig.Daily = &domain.Quota{
+			Sms:   dailyQuota.Sms,
+			Email: dailyQuota.Email,
+		}
+	}
+	if pb.Monthly != nil {
+		monthlyQuota := pb.Monthly
+		quotaConfig.Monthly = &domain.Quota{
+			Sms:   monthlyQuota.Sms,
+			Email: monthlyQuota.Email,
+		}
+	}
+	return quotaConfig
+}
+
+func (s *BizConfigServer) convertCallbackConfigPb(pb *configv1.CallbackConfig) *domain.CallbackConfig {
+	callbackConfig := &domain.CallbackConfig{
+		ServiceName: pb.ServiceName,
+	}
+
+	if pb.RetryPolicy != nil {
+		retryPolicyConfig := s.convertRetryPb(pb.RetryPolicy)
+		callbackConfig.RetryPolicyConfig = retryPolicyConfig
+	}
+
+	return callbackConfig
+}
+
+func (s *BizConfigServer) convertRetryPb(pbRetry *configv1.RetryPolicyConfig) *retry.Config {
 	return &retry.Config{
 		Type: retry.StrategyTypeExponentialBackoff,
 		ExponentialBackoff: &retry.ExponentialBackoffConfig{
@@ -108,18 +174,6 @@ func (s *BizConfigServer) convertRetry(pbRetry *configv1.RetryPolicyConfig) *ret
 	}
 }
 
-func (s *BizConfigServer) Delete(ctx context.Context, request *configv1.DeleteRequest) (*configv1.DeleteResponse, error) {
-	if request.Id == 0 {
-		return &configv1.DeleteResponse{}, fmt.Errorf("%w: biz id is invalid", errs.ErrInvalidParam)
-	}
-
-	err := s.svc.Delete(ctx, request.Id)
-	if err != nil {
-		return &configv1.DeleteResponse{}, err
-	}
-	return &configv1.DeleteResponse{}, nil
-}
-
 func (s *BizConfigServer) FindById(ctx context.Context, req *configv1.FindByIdRequest) (*configv1.FindByIdResponse, error) {
 	if req.Id == 0 {
 		return &configv1.FindByIdResponse{}, fmt.Errorf("%w: biz id is invalid", errs.ErrInvalidParam)
@@ -128,14 +182,44 @@ func (s *BizConfigServer) FindById(ctx context.Context, req *configv1.FindByIdRe
 	bizConfig, err := s.svc.FindById(ctx, req.Id)
 	if err != nil {
 		if errors.Is(err, errs.ErrRecordNotFound) {
-			// TODO: deal with record not found
-			return &configv1.FindByIdResponse{}, nil
+			return &configv1.FindByIdResponse{}, status.Errorf(codes.NotFound, "biz config not found: %v", err)
 		}
 		return &configv1.FindByIdResponse{}, err
 	}
 	return &configv1.FindByIdResponse{
-		Config: s.domainToPb(bizConfig),
+		Config: s.applyMaskToPb(bizConfig, req.FieldMask),
 	}, nil
+}
+
+func (s *BizConfigServer) applyMaskToPb(bizConfig domain.BizConfig, mask *fieldmaskpb.FieldMask) *configv1.BizConfig {
+	pb := s.domainToPb(bizConfig)
+	if mask == nil || len(mask.Paths) == 0 {
+		return pb
+	}
+
+	res := &configv1.BizConfig{}
+	for _, field := range mask.Paths {
+		switch field {
+		case configv1.FieldId:
+			res.Id = pb.Id
+		case configv1.FieldBizId:
+			res.BizId = pb.BizId
+		case configv1.FieldChannelConfig:
+			res.ChannelConfig = pb.ChannelConfig
+		case configv1.FieldQuotaConfig:
+			res.QuotaConfig = pb.QuotaConfig
+		case configv1.FieldCallbackConfig:
+			res.CallbackConfig = pb.CallbackConfig
+		case configv1.FieldRateLimit:
+			res.RateLimit = pb.RateLimit
+		case configv1.FieldCreatedAt:
+			res.CreatedAt = pb.CreatedAt
+		case configv1.FieldUpdatedAt:
+			res.UpdatedAt = pb.UpdatedAt
+		}
+	}
+
+	return res
 }
 
 func (s *BizConfigServer) domainToPb(bizConfig domain.BizConfig) *configv1.BizConfig {

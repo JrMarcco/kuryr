@@ -6,7 +6,7 @@ require (
 	github.com/JrMarcco/dlock v0.0.2
 	github.com/JrMarcco/easy-grpc v0.0.13
 	github.com/JrMarcco/easy-kit v0.0.8
-	github.com/JrMarcco/kuryr-api v0.0.23
+	github.com/JrMarcco/kuryr-api v0.0.24
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/confluentinc/confluent-kafka-go/v2 v2.11.1
 	github.com/golang-jwt/jwt/v5 v5.3.0
@@ -80,6 +80,6 @@ require (
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250818200422-3122310a409c // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250825161204-c5933d9347a5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

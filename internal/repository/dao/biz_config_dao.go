@@ -27,7 +27,8 @@ func (BizConfig) TableName() string {
 }
 
 type BizConfigDao interface {
-	SaveOrUpdate(ctx context.Context, bizConfig BizConfig) (BizConfig, error)
+	Save(ctx context.Context, bizConfig BizConfig) (BizConfig, error)
+	Update(ctx context.Context, bizConfig BizConfig) (BizConfig, error)
 
 	Delete(ctx context.Context, id uint64) error
 	DeleteInTx(ctx context.Context, tx *gorm.DB, id uint64) error
@@ -41,26 +42,44 @@ type DefaultBizConfigDao struct {
 	db *gorm.DB
 }
 
-func (d *DefaultBizConfigDao) SaveOrUpdate(ctx context.Context, bizConfig BizConfig) (BizConfig, error) {
+func (d *DefaultBizConfigDao) Save(ctx context.Context, bizConfig BizConfig) (BizConfig, error) {
 	now := time.Now().UnixMilli()
 	bizConfig.CreatedAt = now
 	bizConfig.UpdatedAt = now
 
-	// 使用 upsert 语句，根据 id 判断冲突
-	res := d.db.WithContext(ctx).Model(&BizConfig{}).Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "id"}},
-		DoUpdates: clause.Assignments(map[string]any{
-			"channel_config":  bizConfig.ChannelConfig,
-			"quota_config":    bizConfig.QuotaConfig,
-			"callback_config": bizConfig.CallbackConfig,
-			"rate_limit":      bizConfig.RateLimit,
-			"updated_at":      now,
-		}),
-	}).Create(&bizConfig)
-	if res.Error != nil {
-		return BizConfig{}, res.Error
+	err := d.db.WithContext(ctx).Model(&BizConfig{}).Create(&bizConfig).Error
+	return bizConfig, err
+}
+
+func (d *DefaultBizConfigDao) Update(ctx context.Context, bizConfig BizConfig) (BizConfig, error) {
+	now := time.Now().UnixMilli()
+	bizConfig.UpdatedAt = now
+
+	values := map[string]any{
+		"updated_at": now,
 	}
-	return bizConfig, nil
+
+	if bizConfig.ChannelConfig.Valid {
+		values["channel_config"] = bizConfig.ChannelConfig
+	}
+
+	if bizConfig.QuotaConfig.Valid {
+		values["quota_config"] = bizConfig.QuotaConfig
+	}
+
+	if bizConfig.CallbackConfig.Valid {
+		values["callback_config"] = bizConfig.CallbackConfig
+	}
+
+	if bizConfig.RateLimit != 0 {
+		values["rate_limit"] = bizConfig.RateLimit
+	}
+
+	err := d.db.WithContext(ctx).Model(&BizConfig{}).
+		Clauses(clause.Returning{}). // 这里一定要返回更新后的全量字段，否则会导致缓存更新失败
+		Where("id = ?", bizConfig.Id).
+		Updates(values).Error
+	return bizConfig, err
 }
 
 func (d *DefaultBizConfigDao) Delete(ctx context.Context, id uint64) error {

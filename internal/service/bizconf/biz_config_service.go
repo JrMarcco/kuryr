@@ -13,7 +13,7 @@ import (
 
 type Service interface {
 	Save(ctx context.Context, bizConfig domain.BizConfig) (domain.BizConfig, error)
-	Delete(ctx context.Context, id uint64) error
+	Update(ctx context.Context, bizConfig domain.BizConfig) (domain.BizConfig, error)
 	FindById(ctx context.Context, id uint64) (domain.BizConfig, error)
 }
 
@@ -38,11 +38,12 @@ func (s *DefaultService) Save(ctx context.Context, bizConfig domain.BizConfig) (
 	return s.bizConfigRepo.Save(ctx, bizConfig)
 }
 
-func (s *DefaultService) Delete(ctx context.Context, id uint64) error {
-	if id == 0 {
-		return fmt.Errorf("%w: invalidate biz config id [ %d ]", errs.ErrInvalidParam, id)
+func (s *DefaultService) Update(ctx context.Context, bizConfig domain.BizConfig) (domain.BizConfig, error) {
+	if bizConfig.Id == 0 {
+		return domain.BizConfig{}, fmt.Errorf("%w: invalidate biz config id [ %d ]", errs.ErrInvalidParam, bizConfig.Id)
 	}
-	return s.bizConfigRepo.Delete(ctx, id)
+
+	return s.bizConfigRepo.Update(ctx, bizConfig)
 }
 
 func (s *DefaultService) FindById(ctx context.Context, id uint64) (domain.BizConfig, error) {
