@@ -136,7 +136,7 @@ func (s *ProviderServer) List(ctx context.Context, request *providerv1.ListReque
 	}
 
 	pbs := slice.Map(providers, func(_ int, p domain.Provider) *providerv1.Provider {
-		return s.domainToPb(p)
+		return s.applyMaskToPb(p, request.FieldMask)
 	})
 	return &providerv1.ListResponse{
 		Providers: pbs,
