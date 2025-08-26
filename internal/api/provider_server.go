@@ -55,8 +55,15 @@ func (s *ProviderServer) pbToDomain(pb *providerv1.Provider) domain.Provider {
 }
 
 func (s *ProviderServer) Delete(ctx context.Context, request *providerv1.DeleteRequest) (*providerv1.DeleteResponse, error) {
-	// TODO: implement me
-	panic("implement me")
+	if request == nil || request.Id == 0 {
+		return &providerv1.DeleteResponse{}, status.Errorf(codes.InvalidArgument, "request or id is nil")
+	}
+
+	if err := s.svc.Delete(ctx, request.Id); err != nil {
+		return &providerv1.DeleteResponse{}, status.Errorf(codes.Internal, "failed to delete provider: %v", err)
+	}
+
+	return &providerv1.DeleteResponse{}, nil
 }
 
 func (s *ProviderServer) Update(ctx context.Context, request *providerv1.UpdateRequest) (*providerv1.UpdateResponse, error) {
