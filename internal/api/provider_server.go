@@ -8,7 +8,11 @@ import (
 	commonv1 "github.com/JrMarcco/kuryr-api/api/go/common/v1"
 	providerv1 "github.com/JrMarcco/kuryr-api/api/go/provider/v1"
 	"github.com/JrMarcco/kuryr/internal/domain"
+	"github.com/JrMarcco/kuryr/internal/errs"
 	"github.com/JrMarcco/kuryr/internal/service/provider"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 var _ providerv1.ProviderServiceServer = (*ProviderServer)(nil)
@@ -18,24 +22,36 @@ type ProviderServer struct {
 }
 
 func (s *ProviderServer) Save(ctx context.Context, request *providerv1.SaveRequest) (*providerv1.SaveResponse, error) {
-	// if request == nil || request.Provider == nil {
-	// 	return &providerv1.SaveResponse{
-	// 		Success: false,
-	// 		ErrMsg:  "[kuryr] invalid request, provider is nil",
-	// 	}, nil
-	// }
+	if request == nil || request.Provider == nil {
+		return &providerv1.SaveResponse{}, status.Errorf(codes.InvalidArgument, "request or provider is nil")
+	}
 
-	// p, err := s.pbToDomain(request.Provider)
-	// if err != nil {
-	// 	return &providerv1.SaveResponse{}, err
-	// }
+	saved, err := s.svc.Save(ctx, s.pbToDomain(request.Provider))
+	if err != nil {
+		return &providerv1.SaveResponse{}, status.Errorf(codes.Internal, "failed to save provider: %v", err)
+	}
 
-	// if err = s.svc.Save(ctx, p); err != nil {
-	// 	return &providerv1.SaveResponse{}, err
-	// }
-	// return &providerv1.SaveResponse{Success: true}, nil
-	// TODO: implement me
-	panic("implement me")
+	return &providerv1.SaveResponse{
+		Provider: s.domainToPb(saved),
+	}, nil
+}
+
+func (s *ProviderServer) pbToDomain(pb *providerv1.Provider) domain.Provider {
+	return domain.Provider{
+		Id:               pb.Id,
+		ProviderName:     pb.ProviderName,
+		Channel:          domain.Channel(pb.Channel),
+		Endpoint:         pb.Endpoint,
+		RegionId:         pb.RegionId,
+		AppId:            pb.AppId,
+		ApiKey:           pb.ApiKey,
+		ApiSecret:        pb.ApiSecret,
+		Weight:           pb.Weight,
+		QpsLimit:         pb.QpsLimit,
+		DailyLimit:       pb.DailyLimit,
+		AuditCallbackUrl: pb.AuditCallbackUrl,
+		ActiveStatus:     domain.ActiveStatus(pb.ActiveStatus),
+	}
 }
 
 func (s *ProviderServer) Delete(ctx context.Context, request *providerv1.DeleteRequest) (*providerv1.DeleteResponse, error) {
@@ -44,55 +60,96 @@ func (s *ProviderServer) Delete(ctx context.Context, request *providerv1.DeleteR
 }
 
 func (s *ProviderServer) Update(ctx context.Context, request *providerv1.UpdateRequest) (*providerv1.UpdateResponse, error) {
-	// if request == nil || request.Provider == nil || request.Provider.Id == 0 {
-	// 	return &providerv1.UpdateResponse{
-	// 		Success: false,
-	// 		ErrMsg:  "[kuryr] invalid request, provider is nil or provider id is invalid",
-	// 	}, nil
-	// }
+	if request == nil || request.Provider == nil {
+		return &providerv1.UpdateResponse{}, status.Errorf(codes.InvalidArgument, "request or provider is nil")
+	}
 
-	// p, err := s.pbToDomain(request.Provider)
-	// if err != nil {
-	// 	return &providerv1.UpdateResponse{}, err
-	// }
+	p, err := s.applyMaskToDomain(request.Provider, request.FieldMask)
+	if err != nil {
+		return &providerv1.UpdateResponse{}, status.Errorf(codes.InvalidArgument, "invalid provider: %v", err)
+	}
 
-	// if err = s.svc.Update(ctx, p); err != nil {
-	// 	return &providerv1.UpdateResponse{
-	// 		Success: false,
-	// 		ErrMsg:  err.Error(),
-	// 	}, err
-	// }
-	// return &providerv1.UpdateResponse{Success: true}, nil
-	// TODO: implement me
-	panic("implement me")
+	// updated, err := s.svc.Update(ctx, p)
+	_, err = s.svc.Update(ctx, p)
+	if err != nil {
+		return &providerv1.UpdateResponse{}, status.Errorf(codes.Internal, "failed to update provider: %v", err)
+	}
+	return &providerv1.UpdateResponse{
+		// TODO: 返回更新后的 provider
+		// Provider: s.domainToPb(updated),
+	}, nil
 }
 
-// func (s *ProviderServer) pbToDomain(pb *providerv1.Provider) (domain.Provider, error) {
-// 	p := domain.Provider{
-// 		Id:               pb.Id,
-// 		ProviderName:     pb.ProviderName,
-// 		Endpoint:         pb.Endpoint,
-// 		RegionId:         pb.RegionId,
-// 		AppId:            pb.AppId,
-// 		ApiKey:           pb.ApiKey,
-// 		ApiSecret:        pb.ApiSecret,
-// 		Weight:           pb.Weight,
-// 		QpsLimit:         pb.QpsLimit,
-// 		DailyLimit:       pb.DailyLimit,
-// 		AuditCallbackUrl: pb.AuditCallbackUrl,
-// 		ActiveStatus:     domain.ActiveStatus(pb.ActiveStatus),
-// 	}
+func (s *ProviderServer) applyMaskToDomain(pb *providerv1.Provider, mask *fieldmaskpb.FieldMask) (domain.Provider, error) {
+	if mask == nil || len(mask.Paths) == 0 {
+		return domain.Provider{}, fmt.Errorf("%w: field mask is nil or paths is empty", errs.ErrInvalidParam)
+	}
 
-// 	switch pb.Channel {
-// 	case commonv1.Channel_SMS:
-// 		p.Channel = domain.ChannelSms
-// 	case commonv1.Channel_EMAIL:
-// 		p.Channel = domain.ChannelEmail
-// 	default:
-// 		return domain.Provider{}, fmt.Errorf("[kuryr] invalid channel: %s", pb.Channel.String())
-// 	}
-// 	return p, nil
-// }
+	p := domain.Provider{
+		Id: pb.Id,
+	}
+
+	for _, field := range mask.Paths {
+		if _, ok := providerv1.UpdatableFields[field]; !ok {
+			return domain.Provider{}, fmt.Errorf("%w: field [ %s ] is not updatable", errs.ErrInvalidParam, field)
+		}
+
+		switch field {
+		case providerv1.FieldProviderName:
+			p.ProviderName = pb.ProviderName
+		case providerv1.FieldChannel:
+			p.Channel = domain.Channel(pb.Channel)
+		case providerv1.FieldEndpoint:
+			p.Endpoint = pb.Endpoint
+		case providerv1.FieldRegionId:
+			p.RegionId = pb.RegionId
+		case providerv1.FieldAppId:
+			p.AppId = pb.AppId
+		case providerv1.FieldApiKey:
+			p.ApiKey = pb.ApiKey
+		case providerv1.FieldApiSecret:
+			p.ApiSecret = pb.ApiSecret
+		case providerv1.FieldWeight:
+			p.Weight = pb.Weight
+		case providerv1.FieldQpsLimit:
+			p.QpsLimit = pb.QpsLimit
+		case providerv1.FieldDailyLimit:
+			p.DailyLimit = pb.DailyLimit
+		case providerv1.FieldAuditCallbackUrl:
+			p.AuditCallbackUrl = pb.AuditCallbackUrl
+		case providerv1.FieldActiveStatus:
+			p.ActiveStatus = domain.ActiveStatus(pb.ActiveStatus)
+		}
+	}
+
+	return p, nil
+}
+
+func (s *ProviderServer) domainToPb(p domain.Provider) *providerv1.Provider {
+	pb := &providerv1.Provider{
+		Id:               p.Id,
+		ProviderName:     p.ProviderName,
+		Endpoint:         p.Endpoint,
+		RegionId:         p.RegionId,
+		AppId:            p.AppId,
+		ApiKey:           p.ApiKey,
+		ApiSecret:        p.ApiSecret,
+		Weight:           p.Weight,
+		QpsLimit:         p.QpsLimit,
+		DailyLimit:       p.DailyLimit,
+		AuditCallbackUrl: p.AuditCallbackUrl,
+		ActiveStatus:     string(p.ActiveStatus),
+	}
+
+	switch p.Channel {
+	case domain.ChannelSms:
+		pb.Channel = commonv1.Channel_SMS
+	case domain.ChannelEmail:
+		pb.Channel = commonv1.Channel_EMAIL
+	default:
+	}
+	return pb
+}
 
 func (s *ProviderServer) List(ctx context.Context, request *providerv1.ListRequest) (*providerv1.ListResponse, error) {
 	if request == nil {
@@ -143,32 +200,6 @@ func (s *ProviderServer) FindByChannel(ctx context.Context, request *providerv1.
 	return &providerv1.FindByChannelResponse{
 		Providers: pbs,
 	}, nil
-}
-
-func (s *ProviderServer) domainToPb(p domain.Provider) *providerv1.Provider {
-	pb := &providerv1.Provider{
-		Id:               p.Id,
-		ProviderName:     p.ProviderName,
-		Endpoint:         p.Endpoint,
-		RegionId:         p.RegionId,
-		AppId:            p.AppId,
-		ApiKey:           p.ApiKey,
-		ApiSecret:        p.ApiSecret,
-		Weight:           p.Weight,
-		QpsLimit:         p.QpsLimit,
-		DailyLimit:       p.DailyLimit,
-		AuditCallbackUrl: p.AuditCallbackUrl,
-		ActiveStatus:     string(p.ActiveStatus),
-	}
-
-	switch p.Channel {
-	case domain.ChannelSms:
-		pb.Channel = commonv1.Channel_SMS
-	case domain.ChannelEmail:
-		pb.Channel = commonv1.Channel_EMAIL
-	default:
-	}
-	return pb
 }
 
 func NewProviderServer(svc provider.Service) *ProviderServer {

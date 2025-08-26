@@ -12,6 +12,7 @@ import (
 
 	"github.com/JrMarcco/kuryr/internal/domain"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const keySize = 32
@@ -44,9 +45,9 @@ func (Provider) TableName() string {
 }
 
 type ProviderDao interface {
-	Save(ctx context.Context, provider Provider) error
+	Save(ctx context.Context, provider Provider) (Provider, error)
 	Delete(ctx context.Context, id uint64) error
-	Update(ctx context.Context, provider Provider) error
+	Update(ctx context.Context, provider Provider) (Provider, error)
 
 	List(ctx context.Context) ([]Provider, error)
 	FindById(ctx context.Context, id uint64) (Provider, error)
@@ -60,7 +61,7 @@ type DefaultProviderDao struct {
 	encryptKey []byte
 }
 
-func (d *DefaultProviderDao) Save(ctx context.Context, provider Provider) error {
+func (d *DefaultProviderDao) Save(ctx context.Context, provider Provider) (Provider, error) {
 	now := time.Now().UnixMilli()
 	provider.CreatedAt = now
 	provider.UpdatedAt = now
@@ -68,12 +69,16 @@ func (d *DefaultProviderDao) Save(ctx context.Context, provider Provider) error 
 	apiSecret := provider.ApiSecret
 	encryptedSecret, err := d.encrypt(apiSecret)
 	if err != nil {
-		return err
+		return Provider{}, err
 	}
 
 	//　db 保存加密后的密钥
 	provider.ApiSecret = encryptedSecret
-	return d.db.WithContext(ctx).Model(&Provider{}).Create(&provider).Error
+	err = d.db.WithContext(ctx).Model(&Provider{}).
+		Clauses(clause.Returning{}).
+		Create(&provider).
+		Scan(&provider).Error
+	return provider, err
 }
 
 // encrypt 使用 AES-GCM 加密
@@ -103,7 +108,7 @@ func (d *DefaultProviderDao) Delete(ctx context.Context, id uint64) error {
 		Delete(&Provider{}).Error
 }
 
-func (d *DefaultProviderDao) Update(ctx context.Context, provider Provider) error {
+func (d *DefaultProviderDao) Update(ctx context.Context, provider Provider) (Provider, error) {
 	provider.UpdatedAt = time.Now().UnixMilli()
 
 	values := map[string]any{
@@ -123,14 +128,17 @@ func (d *DefaultProviderDao) Update(ctx context.Context, provider Provider) erro
 	if provider.ApiSecret != "" {
 		encryptedSecret, err := d.encrypt(provider.ApiSecret)
 		if err != nil {
-			return err
+			return Provider{}, err
 		}
 		values["api_secret"] = encryptedSecret
 	}
 
-	return d.db.WithContext(ctx).Model(&Provider{}).
+	err := d.db.WithContext(ctx).Model(&Provider{}).
+		Clauses(clause.Returning{}).
 		Where("id = ?", provider.Id).
-		Updates(values).Error
+		Updates(values).
+		Scan(&provider).Error
+	return provider, err
 }
 
 func (d *DefaultProviderDao) List(ctx context.Context) ([]Provider, error) {

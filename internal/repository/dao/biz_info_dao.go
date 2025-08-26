@@ -54,7 +54,10 @@ func (d *DefaultBizInfoDao) Save(ctx context.Context, bizInfo BizInfo) (BizInfo,
 	bizInfo.CreatedAt = now
 	bizInfo.UpdatedAt = now
 
-	err := d.db.WithContext(ctx).Model(&BizInfo{}).Create(&bizInfo).Error
+	err := d.db.WithContext(ctx).Model(&BizInfo{}).
+		Clauses(clause.Returning{}).
+		Create(&bizInfo).
+		Scan(&bizInfo).Error
 	return bizInfo, err
 }
 

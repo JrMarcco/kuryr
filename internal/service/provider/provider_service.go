@@ -10,9 +10,9 @@ import (
 )
 
 type Service interface {
-	Save(ctx context.Context, provider domain.Provider) error
+	Save(ctx context.Context, provider domain.Provider) (domain.Provider, error)
 	Delete(ctx context.Context, id uint64) error
-	Update(ctx context.Context, provider domain.Provider) error
+	Update(ctx context.Context, provider domain.Provider) (domain.Provider, error)
 
 	List(ctx context.Context) ([]domain.Provider, error)
 	FindById(ctx context.Context, id uint64) (domain.Provider, error)
@@ -25,9 +25,9 @@ type DefaultService struct {
 	repo repository.ProviderRepo
 }
 
-func (s *DefaultService) Save(ctx context.Context, provider domain.Provider) error {
+func (s *DefaultService) Save(ctx context.Context, provider domain.Provider) (domain.Provider, error) {
 	if err := provider.Validate(); err != nil {
-		return err
+		return domain.Provider{}, err
 	}
 	// 默认状态设置为“未启用”
 	provider.ActiveStatus = domain.ActiveStatusInactive
@@ -59,9 +59,9 @@ func (s *DefaultService) canDelete(provider domain.Provider) error {
 	return nil
 }
 
-func (s *DefaultService) Update(ctx context.Context, provider domain.Provider) error {
+func (s *DefaultService) Update(ctx context.Context, provider domain.Provider) (domain.Provider, error) {
 	if err := provider.Validate(); err != nil {
-		return err
+		return domain.Provider{}, err
 	}
 	return s.repo.Update(ctx, provider)
 }

@@ -47,7 +47,10 @@ func (d *DefaultBizConfigDao) Save(ctx context.Context, bizConfig BizConfig) (Bi
 	bizConfig.CreatedAt = now
 	bizConfig.UpdatedAt = now
 
-	err := d.db.WithContext(ctx).Model(&BizConfig{}).Create(&bizConfig).Error
+	err := d.db.WithContext(ctx).Model(&BizConfig{}).
+		Clauses(clause.Returning{}).
+		Create(&bizConfig).
+		Scan(&bizConfig).Error
 	return bizConfig, err
 }
 
@@ -78,7 +81,8 @@ func (d *DefaultBizConfigDao) Update(ctx context.Context, bizConfig BizConfig) (
 	err := d.db.WithContext(ctx).Model(&BizConfig{}).
 		Clauses(clause.Returning{}). // 这里一定要返回更新后的全量字段，否则会导致缓存更新失败
 		Where("id = ?", bizConfig.Id).
-		Updates(values).Error
+		Updates(values).
+		Scan(&bizConfig).Error
 	return bizConfig, err
 }
 

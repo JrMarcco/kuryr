@@ -13,9 +13,9 @@ import (
 )
 
 type ProviderRepo interface {
-	Save(ctx context.Context, provider domain.Provider) error
+	Save(ctx context.Context, provider domain.Provider) (domain.Provider, error)
 	Delete(ctx context.Context, id uint64) error
-	Update(ctx context.Context, provider domain.Provider) error
+	Update(ctx context.Context, provider domain.Provider) (domain.Provider, error)
 
 	List(ctx context.Context) ([]domain.Provider, error)
 	FindById(ctx context.Context, id uint64) (domain.Provider, error)
@@ -28,16 +28,24 @@ type DefaultProviderRepo struct {
 	dao dao.ProviderDao
 }
 
-func (r *DefaultProviderRepo) Save(ctx context.Context, provider domain.Provider) error {
-	return r.dao.Save(ctx, r.toEntity(provider))
+func (r *DefaultProviderRepo) Save(ctx context.Context, provider domain.Provider) (domain.Provider, error) {
+	entity, err := r.dao.Save(ctx, r.toEntity(provider))
+	if err != nil {
+		return domain.Provider{}, err
+	}
+	return r.toDomain(entity), nil
 }
 
 func (r *DefaultProviderRepo) Delete(ctx context.Context, id uint64) error {
 	return r.dao.Delete(ctx, id)
 }
 
-func (r *DefaultProviderRepo) Update(ctx context.Context, provider domain.Provider) error {
-	return r.dao.Update(ctx, r.toEntity(provider))
+func (r *DefaultProviderRepo) Update(ctx context.Context, provider domain.Provider) (domain.Provider, error) {
+	entity, err := r.dao.Update(ctx, r.toEntity(provider))
+	if err != nil {
+		return domain.Provider{}, err
+	}
+	return r.toDomain(entity), nil
 }
 
 func (r *DefaultProviderRepo) List(ctx context.Context) ([]domain.Provider, error) {
