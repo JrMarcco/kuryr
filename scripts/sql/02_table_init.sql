@@ -131,8 +131,8 @@ CREATE INDEX idx_provider_info_channel ON provider_info(channel);
 DROP TABLE IF EXISTS channel_template;
 CREATE TABLE channel_template (
     id BIGSERIAL PRIMARY KEY,
-    owner_id VARCHAR(128) NOT NULL,
-    owner_type VARCHAR(16) NOT NULL,
+    biz_id BIGINT NOT NULL,
+    biz_type biz_type_enum NOT NULL,
     tpl_name VARCHAR(128) NOT NULL,
     tpl_desc VARCHAR(128) NOT NULL,
     channel channel_enum NOT NULL,
@@ -144,8 +144,8 @@ CREATE TABLE channel_template (
 
 COMMENT ON TABLE channel_template IS '渠道模板信息表';
 COMMENT ON COLUMN channel_template.id IS 'id';
-COMMENT ON COLUMN channel_template.owner_id IS '所属业务 id';
-COMMENT ON COLUMN channel_template.owner_type IS '所属业务类型';
+COMMENT ON COLUMN channel_template.biz_id IS '所属业务 id';
+COMMENT ON COLUMN channel_template.biz_type IS '所属业务类型';
 COMMENT ON COLUMN channel_template.tpl_name IS '模板名';
 COMMENT ON COLUMN channel_template.tpl_desc IS '模板描述';
 COMMENT ON COLUMN channel_template.channel IS '渠道';
@@ -155,8 +155,8 @@ COMMENT ON COLUMN channel_template.created_at IS '创建时间戳 ( Unix 毫秒�
 COMMENT ON COLUMN channel_template.updated_at IS '更新时间戳 ( Unix 毫秒值 )';
 
 -- 组合索引：所属业务 + 消息类型
--- 查询场景：where owner_id = ? / where owner_id = ? and notification_type = ?
-CREATE INDEX idx_channel_template_owner_notification_type ON channel_template(owner_id, notification_type);
+-- 查询场景：where biz_id = ? / where biz_id = ? and notification_type = ?
+CREATE INDEX idx_channel_template_biz_notification_type ON channel_template(biz_id, notification_type);
 
 -- 渠道模板版本信息表
 DROP TABLE IF EXISTS channel_template_version;
@@ -167,8 +167,8 @@ CREATE TABLE channel_template_version (
     signature VARCHAR(128) NOT NULL,
     context TEXT NOT NULL,
     apply_remark VARCHAR(128) NOT NULL,
-    audit_id BIGINT NOT NULL,
     auditor_id BIGINT NOT NULL,
+    audit_id BIGINT NOT NULL,
     audit_time BIGINT NOT NULL DEFAULT 0,
     audit_status audit_status_enum NOT NULL,
     rejection_reason VARCHAR(128) NOT NULL,
@@ -184,8 +184,8 @@ COMMENT ON COLUMN channel_template_version.version_name IS '版本名';
 COMMENT ON COLUMN channel_template_version.signature IS '签名信息';
 COMMENT ON COLUMN channel_template_version.context IS '模板内容';
 COMMENT ON COLUMN channel_template_version.apply_remark IS '申请备注信息';
-COMMENT ON COLUMN channel_template_version.audit_id IS '审批记录 id';
 COMMENT ON COLUMN channel_template_version.auditor_id IS '审批人 id';
+COMMENT ON COLUMN channel_template_version.audit_id IS '审批记录 id';
 COMMENT ON COLUMN channel_template_version.audit_time IS '审批时间';
 COMMENT ON COLUMN channel_template_version.audit_status IS '审批状态';
 COMMENT ON COLUMN channel_template_version.rejection_reason IS '审批拒绝理由';
@@ -205,8 +205,8 @@ CREATE TABLE channel_template_provider (
     tpl_version_id BIGINT NOT NULL,
     provider_id BIGINT NOT NULL,
     provider_name VARCHAR(128) NOT NULL,
-    provider_tpl_id VARCHAR(128) NOT NULL,
     provider_channel channel_enum NOT NULL,
+    provider_tpl_id VARCHAR(128) NOT NULL,
     audit_request_id VARCHAR(64) NOT NULL,
     audit_status audit_status_enum NOT NULL,
     rejection_reason VARCHAR(128) NOT NULL,
@@ -221,8 +221,8 @@ COMMENT ON COLUMN channel_template_provider.tpl_id IS '模板 id';
 COMMENT ON COLUMN channel_template_provider.tpl_version_id IS '模板版本 id';
 COMMENT ON COLUMN channel_template_provider.provider_id IS '供应商 id';
 COMMENT ON COLUMN channel_template_provider.provider_name IS '供应商名称';
-COMMENT ON COLUMN channel_template_provider.provider_tpl_id IS '供应商侧模板 id';
 COMMENT ON COLUMN channel_template_provider.provider_channel IS '供应商渠道';
+COMMENT ON COLUMN channel_template_provider.provider_tpl_id IS '供应商侧模板 id';
 COMMENT ON COLUMN channel_template_provider.audit_request_id IS '审批请求 id';
 COMMENT ON COLUMN channel_template_provider.audit_status IS '审批状态';
 COMMENT ON COLUMN channel_template_provider.rejection_reason IS '审批拒绝理由';
@@ -231,7 +231,7 @@ COMMENT ON COLUMN channel_template_provider.created_at IS '创建时间戳 ( Uni
 COMMENT ON COLUMN channel_template_provider.updated_at IS '更新时间戳 ( Unix 毫秒值 )';
 
 -- 字段索引：版本 id
--- 查询场景：where tpl_version_id in (?)
+-- 查询场景：where tpl_version_id in (?) / where tpl_version_id = ?
 CREATE INDEX idx_channel_template_tpl_version ON channel_template_provider(tpl_version_id);
 
 -- 组合索引：模板 id + 版本 id

@@ -25,7 +25,7 @@ type Provider struct {
 func (p *Provider) Send(ctx context.Context, n domain.Notification) (domain.SendResp, error) {
 	templateId := n.Template.Id
 
-	template, err := p.channelTplRepo.FindDetailById(ctx, templateId)
+	template, err := p.channelTplRepo.GetDetailById(ctx, templateId)
 	if err != nil {
 		return domain.SendResp{}, err
 	}

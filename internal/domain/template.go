@@ -39,9 +39,9 @@ func (n NotificationType) IsValid() bool {
 //  4. 激活版本，激活后可以正常使用模板发送消息。
 //     注意只有审批通过的版本允许激活。
 type ChannelTemplate struct {
-	Id        uint64    `json:"id"`
-	OwnerId   uint64    `json:"owner_id"`   // 拥有者 id，即 biz_id
-	OwnerType OwnerType `json:"owner_type"` // 拥有者类型，即 biz_type
+	Id      uint64  `json:"id"`
+	BizId   uint64  `json:"biz_id"`   // 所属业务 id
+	BizType BizType `json:"biz_type"` // 所属业务类型
 
 	TplName string `json:"tpl_name"` // 模板名
 	TplDesc string `json:"tpl_desc"` // 模板描述
@@ -57,11 +57,11 @@ type ChannelTemplate struct {
 }
 
 func (t ChannelTemplate) Validate() error {
-	if t.OwnerId == 0 {
+	if t.BizId == 0 {
 		return fmt.Errorf("%w: owner id cannot be zero", errs.ErrInvalidParam)
 	}
-	if !t.OwnerType.IsValid() {
-		return fmt.Errorf("%w: invalid owner type: %s", errs.ErrInvalidParam, t.OwnerType)
+	if !t.BizType.IsValid() {
+		return fmt.Errorf("%w: invalid biz type: %s", errs.ErrInvalidParam, t.BizType)
 	}
 
 	if t.TplName == "" {
@@ -145,8 +145,8 @@ type ChannelTemplateVersion struct {
 	ApplyRemark string `json:"apply_remark"` // 申请说明
 
 	// 这里的审批相关字段记录系统内的审批状态，不包含供应商侧的审批状态。
-	AuditId         uint64      `json:"audit_id"`         // 审批记录 id
 	AuditorId       uint64      `json:"auditor_id"`       // 审批人 id
+	AuditId         uint64      `json:"audit_id"`         // 审批记录 id
 	AuditTime       int64       `json:"audit_time"`       // 审批时间
 	AuditStatus     AuditStatus `json:"audit_status"`     // 审批状态
 	RejectionReason string      `json:"rejection_reason"` // 拒绝原因
