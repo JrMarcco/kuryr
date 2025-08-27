@@ -20,7 +20,7 @@ type GeneralProducer[T any] struct {
 func (p *GeneralProducer[T]) Produce(ctx context.Context, event T) error {
 	data, err := json.Marshal(&event)
 	if err != nil {
-		return fmt.Errorf("failed to marshal event: %w", err)
+		return err
 	}
 
 	// 创建专用投递 channel
@@ -77,12 +77,12 @@ func (p *GeneralProducer[T]) Produce(ctx context.Context, event T) error {
 		switch eventType := e.(type) {
 		case *kafka.Message:
 			if eventType.TopicPartition.Error != nil {
-				return fmt.Errorf("failed to produce message [ %s ] to topic [ %s ]: %w", data, p.topic, eventType.TopicPartition.Error)
+				return fmt.Errorf("[failed to produce message [ %s ] to topic [ %s ]: %w", data, p.topic, eventType.TopicPartition.Error)
 			}
 		case kafka.Error:
-			return fmt.Errorf("an error occurred in kafka: %w", errors.New(eventType.Error()))
+			return errors.New(eventType.Error())
 		default:
-			return fmt.Errorf("unknown event: %w", errors.New(e.String()))
+			return errors.New(e.String())
 		}
 	}
 

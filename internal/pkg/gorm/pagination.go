@@ -50,12 +50,12 @@ func Pagination[T any](db *gorm.DB, param *PaginationParam, records []T) (*Pagin
 			Limit:  10,
 		}
 	}
-	
+
 	var total int64
 	// 克隆查询以避免影响原查询
 	countDB := db.Session(&gorm.Session{})
 	if err := countDB.Count(&total).Error; err != nil {
-		return nil, fmt.Errorf("[kuryr] failed to count records: %w", err)
+		return nil, err
 	}
 
 	if total == 0 {
@@ -64,7 +64,7 @@ func Pagination[T any](db *gorm.DB, param *PaginationParam, records []T) (*Pagin
 	}
 
 	if err := db.Offset(param.Offset).Limit(param.Limit).Find(&records).Error; err != nil {
-		return nil, fmt.Errorf("[kuryr] failed to query records: %w", err)
+		return nil, err
 	}
 	return NewPaginationResult(records, total), nil
 }

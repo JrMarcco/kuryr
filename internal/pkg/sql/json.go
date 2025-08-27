@@ -35,7 +35,7 @@ func (j *JsonColumn[T]) Scan(src interface{}) error {
 	case string:
 		bs = []byte(val)
 	default:
-		return fmt.Errorf("[kuryr] unsupported type: %T", src)
+		return fmt.Errorf("unsupported type: %T", src)
 	}
 
 	if err := json.Unmarshal(bs, &j.Val); err != nil {

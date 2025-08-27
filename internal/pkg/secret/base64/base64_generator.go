@@ -22,7 +22,7 @@ func (g *Generator) Generate(length int) (string, error) {
 	// 使用加密安全的随机数生成器
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
-		return "", fmt.Errorf("failed to generate random bytes: %w", err)
+		return "", err
 	}
 
 	// Base64编码，URL安全，无填充
