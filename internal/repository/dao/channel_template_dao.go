@@ -95,7 +95,8 @@ type ChannelTplDao interface {
 	FindVersionByTplId(ctx context.Context, tplId uint64) ([]ChannelTemplateVersion, error)
 
 	SaveProviders(ctx context.Context, providers []ChannelTemplateProvider) error
-	FindProviderByTplId(ctx context.Context, tplId uint64) ([]ChannelTemplateProvider, error)
+	DeleteProvider(ctx context.Context, id uint64) error
+	FindProviderByVersionId(ctx context.Context, versionId uint64) ([]ChannelTemplateProvider, error)
 	FindProviderByVersionIds(ctx context.Context, versionIds []uint64) ([]ChannelTemplateProvider, error)
 }
 
@@ -183,16 +184,12 @@ func (d *DefaultChannelTplDao) FindVersionByIds(ctx context.Context, ids []uint6
 	return versions, err
 }
 
-func (d *DefaultChannelTplDao) FindProviderByTplId(ctx context.Context, tplId uint64) ([]ChannelTemplateProvider, error) {
-	if tplId == 0 {
-		return []ChannelTemplateProvider{}, nil
-	}
-
-	var providers []ChannelTemplateProvider
-	err := d.db.WithContext(ctx).Model(&ChannelTemplateProvider{}).
+func (d *DefaultChannelTplDao) FindVersionByTplId(ctx context.Context, tplId uint64) ([]ChannelTemplateVersion, error) {
+	var versions []ChannelTemplateVersion
+	err := d.db.WithContext(ctx).Model(&ChannelTemplateVersion{}).
 		Where("tpl_id = ?", tplId).
-		Find(&providers).Error
-	return providers, err
+		Find(&versions).Error
+	return versions, err
 }
 
 func (d *DefaultChannelTplDao) SaveProviders(ctx context.Context, providers []ChannelTemplateProvider) error {
@@ -205,12 +202,18 @@ func (d *DefaultChannelTplDao) SaveProviders(ctx context.Context, providers []Ch
 	return d.db.WithContext(ctx).Model(&ChannelTemplateProvider{}).Create(&providers).Error
 }
 
-func (d *DefaultChannelTplDao) FindVersionByTplId(ctx context.Context, tplId uint64) ([]ChannelTemplateVersion, error) {
-	var versions []ChannelTemplateVersion
-	err := d.db.WithContext(ctx).Model(&ChannelTemplateVersion{}).
-		Where("tpl_id = ?", tplId).
-		Find(&versions).Error
-	return versions, err
+func (d *DefaultChannelTplDao) DeleteProvider(ctx context.Context, id uint64) error {
+	return d.db.WithContext(ctx).Model(&ChannelTemplateProvider{}).
+		Where("id = ?", id).
+		Delete(&ChannelTemplateProvider{}).Error
+}
+
+func (d *DefaultChannelTplDao) FindProviderByVersionId(ctx context.Context, versionId uint64) ([]ChannelTemplateProvider, error) {
+	var providers []ChannelTemplateProvider
+	err := d.db.WithContext(ctx).Model(&ChannelTemplateProvider{}).
+		Where("tpl_version_id = ?", versionId).
+		Find(&providers).Error
+	return providers, err
 }
 
 func (d *DefaultChannelTplDao) FindProviderByVersionIds(ctx context.Context, versionIds []uint64) ([]ChannelTemplateProvider, error) {

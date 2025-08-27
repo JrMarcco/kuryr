@@ -73,8 +73,8 @@ func (s *DefaultService) Delete(ctx context.Context, id uint64) error {
 
 // canDelete 判断当前业务是否允许删除。
 func (s *DefaultService) canDelete(ctx context.Context, bizInfo domain.BizInfo) bool {
-	// TODO: implement me
-	panic("implement me")
+	// TODO: 可以依据是否存在未完成的发送任务来判断是否允许删除。
+	return true
 }
 
 func (s *DefaultService) Search(ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.BizInfo], error) {

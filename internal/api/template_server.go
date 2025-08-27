@@ -268,18 +268,117 @@ func (s *TemplateServer) versionDomainToPb(version domain.ChannelTemplateVersion
 }
 
 func (s *TemplateServer) SaveTemplateProviders(ctx context.Context, request *templatev1.SaveTemplateProvidersRequest) (*templatev1.SaveTemplateProvidersResponse, error) {
-	// TODO: implement me
-	panic("implement me")
+	if request == nil || request.TplId == 0 || request.TplVersionId == 0 {
+		return &templatev1.SaveTemplateProvidersResponse{}, status.Errorf(codes.InvalidArgument, "request or tpl_id or tpl_version_id is nil")
+	}
+
+	if len(request.RelatedProviders) == 0 {
+		return &templatev1.SaveTemplateProvidersResponse{}, status.Errorf(codes.InvalidArgument, "providers is empty")
+	}
+
+	providers := slice.Map(request.RelatedProviders, func(_ int, provider *templatev1.RelatedProvider) domain.ChannelTemplateProvider {
+		return domain.ChannelTemplateProvider{
+			TplId:        request.TplId,
+			TplVersionId: request.TplVersionId,
+			ProviderId:   provider.ProviderId,
+		}
+	})
+
+	err := s.svc.SaveProviders(ctx, providers)
+	if err != nil {
+		return &templatev1.SaveTemplateProvidersResponse{}, status.Errorf(codes.Internal, "failed to save template providers: %v", err)
+	}
+
+	return &templatev1.SaveTemplateProvidersResponse{}, nil
 }
 
 func (s *TemplateServer) DeleteTemplateProvider(ctx context.Context, request *templatev1.DeleteTemplateProviderRequest) (*templatev1.DeleteTemplateProviderResponse, error) {
-	// TODO: implement me
-	panic("implement me")
+	if request == nil || request.Id == 0 {
+		return &templatev1.DeleteTemplateProviderResponse{}, status.Errorf(codes.InvalidArgument, "request or id is nil")
+	}
+
+	err := s.svc.DeleteProvider(ctx, request.Id)
+	if err != nil {
+		return &templatev1.DeleteTemplateProviderResponse{}, status.Errorf(codes.Internal, "failed to delete template provider: %v", err)
+	}
+
+	return &templatev1.DeleteTemplateProviderResponse{}, nil
 }
 
 func (s *TemplateServer) ListTemplateProvider(ctx context.Context, request *templatev1.ListTemplateProviderRequest) (*templatev1.ListTemplateProviderResponse, error) {
-	// TODO: implement me
-	panic("implement me")
+	if request == nil || request.VersionId == 0 {
+		return &templatev1.ListTemplateProviderResponse{}, status.Errorf(codes.InvalidArgument, "request or version_id is nil")
+	}
+
+	providers, err := s.svc.FindProviderByVersionId(ctx, request.VersionId)
+	if err != nil {
+		return &templatev1.ListTemplateProviderResponse{}, status.Errorf(codes.Internal, "failed to list template provider: %v", err)
+	}
+
+	pbs := slice.Map(providers, func(_ int, provider domain.ChannelTemplateProvider) *templatev1.TemplateProvider {
+		return s.applyMaskToProviderPb(provider, request.FieldMask)
+	})
+
+	return &templatev1.ListTemplateProviderResponse{
+		Providers: pbs,
+	}, nil
+}
+
+func (s *TemplateServer) applyMaskToProviderPb(provider domain.ChannelTemplateProvider, mask *fieldmaskpb.FieldMask) *templatev1.TemplateProvider {
+	if mask == nil || len(mask.Paths) == 0 {
+		return s.domainToProviderPb(provider)
+	}
+
+	res := &templatev1.TemplateProvider{}
+	for _, field := range mask.Paths {
+		switch field {
+		case templatev1.ProviderFieldId:
+			res.Id = provider.Id
+		case templatev1.ProviderFieldTplId:
+			res.TplId = provider.TplId
+		case templatev1.ProviderFieldTplVersionId:
+			res.TplVersionId = provider.TplVersionId
+		case templatev1.ProviderFieldProviderId:
+			res.ProviderId = provider.ProviderId
+		case templatev1.ProviderFieldProviderName:
+			res.ProviderName = provider.ProviderName
+		case templatev1.ProviderFieldProviderTplId:
+			res.ProviderTplId = provider.ProviderTplId
+		case templatev1.ProviderFieldProviderChannel:
+			res.ProviderChannel = commonv1.Channel(provider.ProviderChannel)
+		case templatev1.ProviderFieldAuditRequestId:
+			res.AuditRequestId = provider.AuditRequestId
+		case templatev1.ProviderFieldAuditStatus:
+			res.AuditStatus = string(provider.AuditStatus)
+		case templatev1.ProviderFieldRejectionReason:
+			res.RejectionReason = provider.RejectionReason
+		case templatev1.ProviderFieldLastReviewAt:
+			res.LastReviewAt = provider.LastReviewAt
+		case templatev1.ProviderFieldCreatedAt:
+			res.CreatedAt = provider.CreatedAt
+		case templatev1.ProviderFieldUpdatedAt:
+			res.UpdatedAt = provider.UpdatedAt
+		}
+	}
+	return res
+}
+
+func (s *TemplateServer) domainToProviderPb(provider domain.ChannelTemplateProvider) *templatev1.TemplateProvider {
+	return &templatev1.TemplateProvider{
+		Id:              provider.Id,
+		TplId:           provider.TplId,
+		TplVersionId:    provider.TplVersionId,
+		ProviderId:      provider.ProviderId,
+		ProviderName:    provider.ProviderName,
+		ProviderTplId:   provider.ProviderTplId,
+		ProviderChannel: commonv1.Channel(provider.ProviderChannel),
+		AuditRequestId:  provider.AuditRequestId,
+		AuditStatus:     string(provider.AuditStatus),
+		RejectionReason: provider.RejectionReason,
+		LastReviewAt:    provider.LastReviewAt,
+		CreatedAt:       provider.CreatedAt,
+		UpdatedAt:       provider.UpdatedAt,
+	}
 }
 
 func NewTemplateServer(svc template.Service) *TemplateServer {

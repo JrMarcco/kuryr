@@ -28,6 +28,8 @@ type ChannelTplRepo interface {
 	FindVersionByTplId(ctx context.Context, tplId uint64) ([]domain.ChannelTemplateVersion, error)
 
 	SaveProviders(ctx context.Context, providers []domain.ChannelTemplateProvider) error
+	DeleteProvider(ctx context.Context, id uint64) error
+	FindProviderByVersionId(ctx context.Context, versionId uint64) ([]domain.ChannelTemplateProvider, error)
 }
 
 var _ ChannelTplRepo = (*DefaultChannelTplRepo)(nil)
@@ -173,6 +175,20 @@ func (r *DefaultChannelTplRepo) FindVersionById(ctx context.Context, id uint64) 
 	return r.toVersionDomain(entity), nil
 }
 
+func (r *DefaultChannelTplRepo) FindVersionByTplId(ctx context.Context, tplId uint64) ([]domain.ChannelTemplateVersion, error) {
+	entities, err := r.dao.FindVersionByTplId(ctx, tplId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("%w: cannot find channel template version, tpl_id = %d", errs.ErrRecordNotFound, tplId)
+		}
+		return nil, err
+	}
+
+	return slice.Map(entities, func(_ int, entity dao.ChannelTemplateVersion) domain.ChannelTemplateVersion {
+		return r.toVersionDomain(entity)
+	}), nil
+}
+
 func (r *DefaultChannelTplRepo) SaveProviders(ctx context.Context, providers []domain.ChannelTemplateProvider) error {
 	entities := slice.Map(providers, func(_ int, provider domain.ChannelTemplateProvider) dao.ChannelTemplateProvider {
 		return r.toProviderEntity(provider)
@@ -188,17 +204,17 @@ func (r *DefaultChannelTplRepo) SaveProviders(ctx context.Context, providers []d
 	return r.dao.SaveProviders(ctx, entities)
 }
 
-func (r *DefaultChannelTplRepo) FindVersionByTplId(ctx context.Context, tplId uint64) ([]domain.ChannelTemplateVersion, error) {
-	entities, err := r.dao.FindVersionByTplId(ctx, tplId)
+func (r *DefaultChannelTplRepo) DeleteProvider(ctx context.Context, id uint64) error {
+	return r.dao.DeleteProvider(ctx, id)
+}
+
+func (r *DefaultChannelTplRepo) FindProviderByVersionId(ctx context.Context, versionId uint64) ([]domain.ChannelTemplateProvider, error) {
+	entities, err := r.dao.FindProviderByVersionId(ctx, versionId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("%w: cannot find channel template version, tpl_id = %d", errs.ErrRecordNotFound, tplId)
-		}
 		return nil, err
 	}
-
-	return slice.Map(entities, func(_ int, entity dao.ChannelTemplateVersion) domain.ChannelTemplateVersion {
-		return r.toVersionDomain(entity)
+	return slice.Map(entities, func(_ int, entity dao.ChannelTemplateProvider) domain.ChannelTemplateProvider {
+		return r.toProviderDomain(entity)
 	}), nil
 }
 

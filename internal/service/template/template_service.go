@@ -23,6 +23,8 @@ type Service interface {
 	FindVersionByTplId(ctx context.Context, tplId uint64) ([]domain.ChannelTemplateVersion, error)
 
 	SaveProviders(ctx context.Context, providers []domain.ChannelTemplateProvider) error
+	DeleteProvider(ctx context.Context, id uint64) error
+	FindProviderByVersionId(ctx context.Context, versionId uint64) ([]domain.ChannelTemplateProvider, error)
 }
 
 var _ Service = (*DefaultService)(nil)
@@ -63,6 +65,8 @@ func (s *DefaultService) DeleteVersion(ctx context.Context, id uint64) error {
 	return s.repo.DeleteVersion(ctx, id)
 }
 
+// TODO: 这里需要做一些业务上的判断。
+// ActivateVersion 激活版本。
 func (s *DefaultService) ActivateVersion(ctx context.Context, templateId uint64, versionId uint64) error {
 	template, err := s.repo.FindTemplateById(ctx, templateId)
 	if err != nil {
@@ -107,6 +111,16 @@ func (s *DefaultService) SaveProviders(ctx context.Context, providers []domain.C
 
 	// TODO: 提交消息到 kafka，消费者端来提交模板到供应商侧进行审核
 	return nil
+}
+
+// DeleteProvider 删除版本关联供应商。
+// TODO: 这里要考虑增加是否允许删除的逻辑，同时要考虑删除后是否需要通知供应商侧。
+func (s *DefaultService) DeleteProvider(ctx context.Context, id uint64) error {
+	return s.repo.DeleteProvider(ctx, id)
+}
+
+func (s *DefaultService) FindProviderByVersionId(ctx context.Context, versionId uint64) ([]domain.ChannelTemplateProvider, error) {
+	return s.repo.FindProviderByVersionId(ctx, versionId)
 }
 
 func NewDefaultService(repo repository.ChannelTplRepo) *DefaultService {
