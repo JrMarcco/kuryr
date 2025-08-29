@@ -143,6 +143,7 @@ func (r *DefaultBizConfigRepo) clearCache(ctx context.Context, id uint64) {
 
 func (r *DefaultBizConfigRepo) toEntity(bizConfig domain.BizConfig) dao.BizConfig {
 	entity := dao.BizConfig{
+		Id:        bizConfig.Id,
 		BizId:     bizConfig.BizId,
 		OwnerType: string(bizConfig.OwnerType),
 		RateLimit: bizConfig.RateLimit,

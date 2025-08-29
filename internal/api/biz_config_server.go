@@ -87,7 +87,7 @@ func (s *BizConfigServer) applyMaskToDomain(pb *configv1.BizConfig, mask *fieldm
 	}
 
 	bizConfig := domain.BizConfig{
-		Id: pb.BizId,
+		Id: pb.Id,
 	}
 
 	for _, field := range mask.Paths {
@@ -224,6 +224,7 @@ func (s *BizConfigServer) applyMaskToPb(bizConfig domain.BizConfig, mask *fieldm
 
 func (s *BizConfigServer) domainToPb(bizConfig domain.BizConfig) *configv1.BizConfig {
 	pb := &configv1.BizConfig{
+		Id:        bizConfig.Id,
 		BizId:     bizConfig.BizId,
 		OwnerType: string(bizConfig.OwnerType),
 		RateLimit: bizConfig.RateLimit,
