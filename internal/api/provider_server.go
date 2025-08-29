@@ -76,14 +76,12 @@ func (s *ProviderServer) Update(ctx context.Context, request *providerv1.UpdateR
 		return &providerv1.UpdateResponse{}, status.Errorf(codes.InvalidArgument, "invalid provider: %v", err)
 	}
 
-	// updated, err := s.svc.Update(ctx, p)
-	_, err = s.svc.Update(ctx, p)
+	updated, err := s.svc.Update(ctx, p)
 	if err != nil {
 		return &providerv1.UpdateResponse{}, status.Errorf(codes.Internal, "failed to update provider: %v", err)
 	}
 	return &providerv1.UpdateResponse{
-		// TODO: 返回更新后的 provider
-		// Provider: s.domainToPb(updated),
+		Provider: s.domainToPb(updated),
 	}, nil
 }
 
