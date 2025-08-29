@@ -14,7 +14,7 @@ import (
 type Service interface {
 	Save(ctx context.Context, bizConfig domain.BizConfig) (domain.BizConfig, error)
 	Update(ctx context.Context, bizConfig domain.BizConfig) (domain.BizConfig, error)
-	FindById(ctx context.Context, id uint64) (domain.BizConfig, error)
+	FindByBizId(ctx context.Context, id uint64) (domain.BizConfig, error)
 }
 
 var _ Service = (*DefaultService)(nil)
@@ -25,11 +25,11 @@ type DefaultService struct {
 }
 
 func (s *DefaultService) Save(ctx context.Context, bizConfig domain.BizConfig) (domain.BizConfig, error) {
-	if bizConfig.Id == 0 {
-		return domain.BizConfig{}, fmt.Errorf("%w: invalidate biz config id [ %d ]", errs.ErrInvalidParam, bizConfig.Id)
+	if bizConfig.BizId == 0 {
+		return domain.BizConfig{}, fmt.Errorf("%w: invalidate biz id [ %d ]", errs.ErrInvalidParam, bizConfig.Id)
 	}
 
-	bizInfo, err := s.bizInfoRepo.FindById(ctx, bizConfig.Id)
+	bizInfo, err := s.bizInfoRepo.FindById(ctx, bizConfig.BizId)
 	if err != nil {
 		return domain.BizConfig{}, fmt.Errorf("%w: failed to find biz info by id [ %d ]", errs.ErrInvalidParam, bizConfig.Id)
 	}
@@ -46,11 +46,11 @@ func (s *DefaultService) Update(ctx context.Context, bizConfig domain.BizConfig)
 	return s.bizConfigRepo.Update(ctx, bizConfig)
 }
 
-func (s *DefaultService) FindById(ctx context.Context, id uint64) (domain.BizConfig, error) {
-	if id == 0 {
-		return domain.BizConfig{}, fmt.Errorf("%w: invalidate biz config id [ %d ]", errs.ErrInvalidParam, id)
+func (s *DefaultService) FindByBizId(ctx context.Context, bizId uint64) (domain.BizConfig, error) {
+	if bizId == 0 {
+		return domain.BizConfig{}, fmt.Errorf("%w: invalidate biz id [ %d ]", errs.ErrInvalidParam, bizId)
 	}
-	return s.bizConfigRepo.FindById(ctx, id)
+	return s.bizConfigRepo.FindByBizId(ctx, bizId)
 }
 
 func NewDefaultService(bizInfoRepo repository.BizInfoRepo, bizConfigRepo repository.BizConfigRepo) *DefaultService {

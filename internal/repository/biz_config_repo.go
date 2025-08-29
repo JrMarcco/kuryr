@@ -17,7 +17,7 @@ import (
 type BizConfigRepo interface {
 	Save(ctx context.Context, bizConfig domain.BizConfig) (domain.BizConfig, error)
 	Update(ctx context.Context, bizConfig domain.BizConfig) (domain.BizConfig, error)
-	FindById(ctx context.Context, id uint64) (domain.BizConfig, error)
+	FindByBizId(ctx context.Context, bizId uint64) (domain.BizConfig, error)
 
 	DeleteInTx(ctx context.Context, tx *gorm.DB, id uint64) error
 }
@@ -77,7 +77,7 @@ func (r *DefaultBizConfigRepo) Update(ctx context.Context, bizConfig domain.BizC
 	return d, nil
 }
 
-func (r *DefaultBizConfigRepo) FindById(ctx context.Context, id uint64) (domain.BizConfig, error) {
+func (r *DefaultBizConfigRepo) FindByBizId(ctx context.Context, id uint64) (domain.BizConfig, error) {
 	// 从本地缓存获取
 	bizConfig, err := r.localCache.Get(ctx, id)
 	if err == nil {
@@ -98,7 +98,7 @@ func (r *DefaultBizConfigRepo) FindById(ctx context.Context, id uint64) (domain.
 	// TODO: 如果这里触发熔断、降级可以直接返回
 
 	// 从 db 获取并设置 redis 缓存 + 本地缓存
-	entity, err := r.dao.FindById(ctx, id)
+	entity, err := r.dao.FindByBizId(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.BizConfig{}, fmt.Errorf("%w: cannot find biz config, id = %d", errs.ErrRecordNotFound, id)
@@ -143,7 +143,7 @@ func (r *DefaultBizConfigRepo) clearCache(ctx context.Context, id uint64) {
 
 func (r *DefaultBizConfigRepo) toEntity(bizConfig domain.BizConfig) dao.BizConfig {
 	entity := dao.BizConfig{
-		Id:        bizConfig.Id,
+		BizId:     bizConfig.BizId,
 		OwnerType: string(bizConfig.OwnerType),
 		RateLimit: bizConfig.RateLimit,
 	}
@@ -175,6 +175,7 @@ func (r *DefaultBizConfigRepo) toEntity(bizConfig domain.BizConfig) dao.BizConfi
 func (r *DefaultBizConfigRepo) toDomain(entity dao.BizConfig) domain.BizConfig {
 	bizConfig := domain.BizConfig{
 		Id:        entity.Id,
+		BizId:     entity.BizId,
 		OwnerType: domain.OwnerType(entity.OwnerType),
 		RateLimit: entity.RateLimit,
 	}

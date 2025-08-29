@@ -22,7 +22,7 @@ func (c *RBizConfigCache) Set(ctx context.Context, bizConfig domain.BizConfig) e
 		return fmt.Errorf("[kuryr] failed to marshal biz config to json: %w", err)
 	}
 
-	key := cache.BizConfigCacheKey(bizConfig.Id)
+	key := cache.BizConfigCacheKey(bizConfig.BizId)
 	err = c.rc.Set(ctx, key, data, cache.BizConfigDefaultLocalExp).Err()
 	if err != nil {
 		return fmt.Errorf("[kuryr] failed to set biz config to redis: %w", err)
@@ -30,8 +30,8 @@ func (c *RBizConfigCache) Set(ctx context.Context, bizConfig domain.BizConfig) e
 	return nil
 }
 
-func (c *RBizConfigCache) Get(ctx context.Context, id uint64) (domain.BizConfig, error) {
-	key := cache.BizConfigCacheKey(id)
+func (c *RBizConfigCache) Get(ctx context.Context, bizId uint64) (domain.BizConfig, error) {
+	key := cache.BizConfigCacheKey(bizId)
 	str, err := c.rc.Get(ctx, key).Result()
 	if err != nil {
 		return domain.BizConfig{}, fmt.Errorf("[kuryr] failed to get biz config from redis: %w", err)
@@ -44,8 +44,8 @@ func (c *RBizConfigCache) Get(ctx context.Context, id uint64) (domain.BizConfig,
 	return bizConfig, nil
 }
 
-func (c *RBizConfigCache) Del(ctx context.Context, id uint64) error {
-	return c.rc.Del(ctx, cache.BizConfigCacheKey(id)).Err()
+func (c *RBizConfigCache) Del(ctx context.Context, bizId uint64) error {
+	return c.rc.Del(ctx, cache.BizConfigCacheKey(bizId)).Err()
 }
 
 func NewRBizConfigCache(rc redis.Cmdable) *RBizConfigCache {

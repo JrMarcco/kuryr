@@ -233,7 +233,7 @@ func (s *DefaultService) getCallbackConfig(ctx context.Context, bizId uint64) (*
 		return cfg, nil
 	}
 
-	bizConfig, err := s.bizConfigRepo.FindById(ctx, bizId)
+	bizConfig, err := s.bizConfigRepo.FindByBizId(ctx, bizId)
 	if err != nil {
 		return nil, err
 	}

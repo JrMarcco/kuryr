@@ -39,7 +39,6 @@ func (s *DefaultService) Save(ctx context.Context, bizInfo domain.BizInfo) (doma
 		return domain.BizInfo{}, err
 	}
 	bizInfo.BizSecret = bizSecret
-
 	return s.bizInfoRepo.Save(ctx, bizInfo)
 }
 

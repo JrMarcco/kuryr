@@ -22,13 +22,13 @@ type LBizConfigCache struct {
 }
 
 func (c *LBizConfigCache) Set(_ context.Context, bizConfig domain.BizConfig) error {
-	key := cache.BizConfigCacheKey(bizConfig.Id)
+	key := cache.BizConfigCacheKey(bizConfig.BizId)
 	c.cc.Set(key, bizConfig, cache.BizConfigDefaultLocalExp)
 	return nil
 }
 
-func (c *LBizConfigCache) Get(_ context.Context, id uint64) (domain.BizConfig, error) {
-	val, ok := c.cc.Get(cache.BizConfigCacheKey(id))
+func (c *LBizConfigCache) Get(_ context.Context, bizId uint64) (domain.BizConfig, error) {
+	val, ok := c.cc.Get(cache.BizConfigCacheKey(bizId))
 	if !ok {
 		return domain.BizConfig{}, fmt.Errorf("[biz config] biz config not found")
 	}
@@ -39,8 +39,8 @@ func (c *LBizConfigCache) Get(_ context.Context, id uint64) (domain.BizConfig, e
 	return bizConfig, nil
 }
 
-func (c *LBizConfigCache) Del(_ context.Context, id uint64) error {
-	c.cc.Delete(cache.BizConfigCacheKey(id))
+func (c *LBizConfigCache) Del(_ context.Context, bizId uint64) error {
+	c.cc.Delete(cache.BizConfigCacheKey(bizId))
 	return nil
 }
 

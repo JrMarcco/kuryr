@@ -43,7 +43,7 @@ func (s *BizConfigServer) Save(ctx context.Context, request *configv1.SaveReques
 // pbToDomain convert biz config protobuf to domain
 func (s *BizConfigServer) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {
 	bizConfig := domain.BizConfig{
-		Id:        pb.BizId,
+		BizId:     pb.BizId,
 		RateLimit: pb.RateLimit,
 	}
 
@@ -174,20 +174,20 @@ func (s *BizConfigServer) convertRetryPb(pbRetry *configv1.RetryPolicyConfig) *r
 	}
 }
 
-func (s *BizConfigServer) FindById(ctx context.Context, req *configv1.FindByIdRequest) (*configv1.FindByIdResponse, error) {
-	if req.Id == 0 {
-		return &configv1.FindByIdResponse{}, fmt.Errorf("%w: biz id is invalid", errs.ErrInvalidParam)
+func (s *BizConfigServer) FindByBizId(ctx context.Context, req *configv1.FindByBizIdRequest) (*configv1.FindByBizIdResponse, error) {
+	if req.BizId == 0 {
+		return &configv1.FindByBizIdResponse{}, fmt.Errorf("%w: biz id is invalid", errs.ErrInvalidParam)
 	}
 
-	bizConfig, err := s.svc.FindById(ctx, req.Id)
+	bizConfig, err := s.svc.FindByBizId(ctx, req.BizId)
 	if err != nil {
 		if errors.Is(err, errs.ErrRecordNotFound) {
-			return &configv1.FindByIdResponse{}, status.Errorf(codes.NotFound, "biz config not found: %v", err)
+			return &configv1.FindByBizIdResponse{}, status.Errorf(codes.NotFound, "biz config not found: %v", err)
 		}
-		return &configv1.FindByIdResponse{}, err
+		return &configv1.FindByBizIdResponse{}, err
 	}
-	return &configv1.FindByIdResponse{
-		Config: s.applyMaskToPb(bizConfig, req.FieldMask),
+	return &configv1.FindByBizIdResponse{
+		BizConfig: s.applyMaskToPb(bizConfig, req.FieldMask),
 	}, nil
 }
 
@@ -224,7 +224,7 @@ func (s *BizConfigServer) applyMaskToPb(bizConfig domain.BizConfig, mask *fieldm
 
 func (s *BizConfigServer) domainToPb(bizConfig domain.BizConfig) *configv1.BizConfig {
 	pb := &configv1.BizConfig{
-		BizId:     bizConfig.Id,
+		BizId:     bizConfig.BizId,
 		OwnerType: string(bizConfig.OwnerType),
 		RateLimit: bizConfig.RateLimit,
 	}

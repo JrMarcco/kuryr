@@ -33,7 +33,7 @@ type BizConfigDao interface {
 	Delete(ctx context.Context, id uint64) error
 	DeleteInTx(ctx context.Context, tx *gorm.DB, id uint64) error
 
-	FindById(ctx context.Context, id uint64) (BizConfig, error)
+	FindByBizId(ctx context.Context, bizId uint64) (BizConfig, error)
 }
 
 var _ BizConfigDao = (*DefaultBizConfigDao)(nil)
@@ -98,10 +98,10 @@ func (d *DefaultBizConfigDao) DeleteInTx(ctx context.Context, tx *gorm.DB, id ui
 		Delete(&BizConfig{}).Error
 }
 
-func (d *DefaultBizConfigDao) FindById(ctx context.Context, id uint64) (BizConfig, error) {
+func (d *DefaultBizConfigDao) FindByBizId(ctx context.Context, bizId uint64) (BizConfig, error) {
 	var bizConfig BizConfig
 	err := d.db.WithContext(ctx).Model(&BizConfig{}).
-		Where("id = ?", id).
+		Where("biz_id = ?", bizId).
 		First(&bizConfig).Error
 	return bizConfig, err
 }

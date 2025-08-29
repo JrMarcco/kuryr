@@ -188,6 +188,11 @@ func (s *TemplateServer) DeleteTemplateVersion(ctx context.Context, request *tem
 	return &templatev1.DeleteTemplateVersionResponse{}, nil
 }
 
+func (s *TemplateServer) ActivateTemplateVersion(ctx context.Context, request *templatev1.ActivateTemplateVersionRequest) (*templatev1.ActivateTemplateVersionResponse, error) {
+	// TODO: implement me
+	panic("implement me")
+}
+
 func (s *TemplateServer) ListTemplateVersion(ctx context.Context, request *templatev1.ListTemplateVersionRequest) (*templatev1.ListTemplateVersionResponse, error) {
 	if request == nil || request.TplId == 0 {
 		return &templatev1.ListTemplateVersionResponse{}, status.Errorf(codes.InvalidArgument, "request or tpl_id is nil")

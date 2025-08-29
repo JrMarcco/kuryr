@@ -6,7 +6,7 @@ require (
 	github.com/JrMarcco/dlock v0.0.2
 	github.com/JrMarcco/easy-grpc v0.0.13
 	github.com/JrMarcco/easy-kit v0.0.8
-	github.com/JrMarcco/kuryr-api v0.0.25
+	github.com/JrMarcco/kuryr-api v0.0.27
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/confluentinc/confluent-kafka-go/v2 v2.11.1
 	github.com/golang-jwt/jwt/v5 v5.3.0

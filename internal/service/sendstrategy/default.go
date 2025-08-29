@@ -71,7 +71,7 @@ func (s *DefaultSendStrategy) batchSave(ctx context.Context, ns []domain.Notific
 }
 
 func (s *DefaultSendStrategy) needCallback(ctx context.Context, n domain.Notification) bool {
-	bizConfig, err := s.bizConfigRepo.FindById(ctx, n.BizId)
+	bizConfig, err := s.bizConfigRepo.FindByBizId(ctx, n.BizId)
 	if err != nil {
 		s.logger.Error("[kuryr] failed to find biz config", zap.Uint64("biz_id", n.BizId), zap.Error(err))
 		return false
