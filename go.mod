@@ -1,6 +1,6 @@
 module github.com/JrMarcco/kuryr
 
-go 1.24.5
+go 1.25
 
 require (
 	github.com/JrMarcco/dlock v0.0.2
@@ -13,15 +13,15 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.23.0
 	github.com/redis/go-redis/v9 v9.12.1
-	github.com/spf13/pflag v1.0.7
+	github.com/spf13/pflag v1.0.8
 	github.com/spf13/viper v1.20.1
-	github.com/stretchr/testify v1.11.0
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.1.16
+	github.com/stretchr/testify v1.11.1
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.1.20
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.1.0
 	go.etcd.io/etcd/client/v3 v3.6.4
 	go.mongodb.org/mongo-driver/v2 v2.3.0
-	go.opentelemetry.io/otel v1.37.0
-	go.opentelemetry.io/otel/trace v1.37.0
+	go.opentelemetry.io/otel v1.38.0
+	go.opentelemetry.io/otel/trace v1.38.0
 	go.uber.org/fx v1.24.0
 	go.uber.org/mock v0.6.0
 	go.uber.org/zap v1.27.0
@@ -29,7 +29,7 @@ require (
 	google.golang.org/grpc v1.75.0
 	google.golang.org/protobuf v1.36.8
 	gorm.io/driver/postgres v1.6.0
-	gorm.io/gorm v1.30.1
+	gorm.io/gorm v1.30.2
 )
 
 require (
@@ -72,14 +72,14 @@ require (
 	go.etcd.io/etcd/api/v3 v3.6.4 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.6.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
-	go.opentelemetry.io/otel/metric v1.37.0 // indirect
+	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.uber.org/dig v1.19.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250825161204-c5933d9347a5 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250825161204-c5933d9347a5 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250826171959-ef028d996bc1 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250826171959-ef028d996bc1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
