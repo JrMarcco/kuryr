@@ -34,8 +34,8 @@ C = CN
 ST = Beijing
 L = Beijing
 O = Kuryr
-OU = etcd-server
-CN = etcd-server
+OU = kuryr-etcd-server
+CN = kuryr-etcd-server
 
 [v3_req]
 basicConstraints = CA:FALSE
@@ -82,8 +82,8 @@ C = CN
 ST = Beijing
 L = Beijing
 O = Kuryr
-OU = etcd-client
-CN = etcd-client
+OU = kuryr-etcd-client
+CN = kuryr-etcd-client
 
 [v3_req]
 basicConstraints = CA:FALSE
@@ -92,8 +92,7 @@ extendedKeyUsage = clientAuth
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = etcd-client
-DNS.2 = kuryr-client
+DNS.1 = kuryr-etcd-client
 IP.1 = 127.0.0.1
 EOF
 
@@ -121,7 +120,7 @@ echo "=== 证书验证 ==="
 echo "📋 CA 证书信息："
 openssl x509 -in ca.pem -text -noout | grep -E "(Subject:|Public Key Algorithm:|Signature Algorithm:)"
 
-echo -e "\n📋 服务器证书 SAN 扩展（仅 DNS）："
+echo -e "\n📋 服务器证书 SAN 扩展（仅 DNS）"
 openssl x509 -in server.pem -text -noout | grep -A 10 "Subject Alternative Name" || echo "未找到 SAN 扩展"
 
 echo -e "\n📋 验证证书链："
