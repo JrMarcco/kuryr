@@ -41,7 +41,7 @@ services:
       - ./data/data-1:/opt/bitnami/etcd/data
       - ./certs:/opt/bitnami/etcd/certs:ro
     networks:
-      - etcd-network
+      - kuryr-network
 
   etcd-kuryr-2:
     image: bitnami/etcd:latest
@@ -85,7 +85,7 @@ services:
       - ./data/data-2:/opt/bitnami/etcd/data
       - ./certs:/opt/bitnami/etcd/certs:ro
     networks:
-      - etcd-network
+      - kuryr-network
 
   etcd-kuryr-3:
     image: bitnami/etcd:latest
@@ -129,8 +129,8 @@ services:
       - ./data/data-3:/opt/bitnami/etcd/data
       - ./certs:/opt/bitnami/etcd/certs:ro
     networks:
-      - etcd-network
+      - kuryr-network
 
 networks:
-  etcd-network:
+  kuryr-network:
     driver: bridge
