@@ -1,8 +1,8 @@
 #!/bin/bash
-# scripts/docker/etcd/certs_gen.sh - 生成 etcd 3节点集群 Ed25519 TLS 证书（仅 DNS）
+# scripts/docker/etcd/certs_gen.sh - 生成 etcd 3 节点集群 Ed25519 TLS 证书 ( 仅 DNS 配置 )
 set -e
 
-echo "=== 生成 etcd 3节点集群 Ed25519 TLS 证书（仅 DNS 配置）==="
+echo "=== 生成 etcd 3节点集群 Ed25519 TLS 证书 ( 仅 DNS 配置 )==="
 
 # 创建证书目录
 CERT_DIR="./certs"
@@ -34,8 +34,8 @@ C = CN
 ST = Beijing
 L = Beijing
 O = Kuryr
-OU = kuryr-etcd-server
-CN = kuryr-etcd-server
+OU = etcd-kuryr-server
+CN = etcd-kuryr-server
 
 [v3_req]
 basicConstraints = CA:FALSE
@@ -82,8 +82,8 @@ C = CN
 ST = Beijing
 L = Beijing
 O = Kuryr
-OU = kuryr-etcd-client
-CN = kuryr-etcd-client
+OU = etcd-kuryr-client
+CN = etcd-kuryr-client
 
 [v3_req]
 basicConstraints = CA:FALSE
@@ -92,7 +92,7 @@ extendedKeyUsage = clientAuth
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = kuryr-etcd-client
+DNS.1 = etcd-kuryr-client
 IP.1 = 127.0.0.1
 EOF
 
@@ -120,7 +120,7 @@ echo "=== 证书验证 ==="
 echo "📋 CA 证书信息："
 openssl x509 -in ca.pem -text -noout | grep -E "(Subject:|Public Key Algorithm:|Signature Algorithm:)"
 
-echo -e "\n📋 服务器证书 SAN 扩展（仅 DNS）"
+echo -e "\n📋 服务器证书 SAN 扩展 ( 仅 DNS )"
 openssl x509 -in server.pem -text -noout | grep -A 10 "Subject Alternative Name" || echo "未找到 SAN 扩展"
 
 echo -e "\n📋 验证证书链："
@@ -130,7 +130,7 @@ openssl verify -CAfile ca.pem client.pem
 echo -e "\n=== 证书文件列表 ==="
 ls -la *.pem *.conf
 
-echo -e "\n✅ etcd 3节点集群 Ed25519 TLS 证书生成成功（仅 DNS 配置）！"
+echo -e "\n✅ etcd 3节点集群 Ed25519 TLS 证书生成成功 ( 仅 DNS 配置 )"
 echo "📁 证书位置: $(pwd)"
 
 echo -e "\n🔍 证书算法验证："
